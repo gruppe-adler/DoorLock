@@ -1,11 +1,11 @@
 [ComponentEditorProps(category: "Custom", description: "Door Lock Component")]
-class DoorLockComponentClass : ScriptComponentClass {
+class GRAD_DoorLockComponentClass : ScriptComponentClass {
 }
 
-class DoorLockComponent : ScriptComponent
+class GRAD_DoorLockComponent : ScriptComponent
 {
     // Variables exposed to the editor
-    [Attribute("0", UIWidgets.CheckBox, "Door Lock State", "" )]
+    [Attribute("1", UIWidgets.CheckBox, "Door Lock State", "" )]
     bool m_isLocked;
 
     // Called when the game initializes the component
@@ -14,4 +14,9 @@ class DoorLockComponent : ScriptComponent
         super.EOnInit(owner);
         Print("Door Lock Component Initialized with: " + m_isLocked.ToString());
     }
+	
+	bool GetLockState() 
+	{
+		return m_isLocked;
+	}
 }

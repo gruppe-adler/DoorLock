@@ -2,6 +2,7 @@ GenericEntity {
  ID "627CE52CCB2692FE"
  components {
   DoorLockComponent "{6328B3D94FA43A7A}" {
+   m_isLocked 1
   }
  }
 }
