@@ -1,8 +1,7 @@
 GenericEntity {
  ID "627CE52CCB2692FE"
  components {
-  GRAD_DoorLockComponent "{6334BA21EBF38DB6}" {
-   m_isLocked 1
+  GRAD_DoorLockComponent "{6334CB0FEDFC0A85}" {
   }
   ActionsManagerComponent "{F32B667C3C823800}" {
    additionalActions {

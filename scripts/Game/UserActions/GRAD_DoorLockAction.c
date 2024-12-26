@@ -6,15 +6,10 @@ class GRAD_DoorLockAction : ScriptedUserAction
 	DoorComponent m_door;
 	GRAD_DoorLockComponent m_lockComponent;
 	
-    //------------------------------------------------------------------------------------------------
-    override void PerformAction(IEntity pOwnerEntity, IEntity pUserEntity)
-    {
-		if (!pOwnerEntity) {
-			ShowHint("no owner", "No owner");
-			return;
-		}
-           
+	override void Init(IEntity pOwnerEntity, GenericComponent pManagerComponent) {
+		
 		DoorComponent doorComp = DoorComponent.Cast(pOwnerEntity.FindComponent(DoorComponent));
+		
 		if (!doorComp) {
 			Print("No doorComp found in DoorLockAction");
 			return;
@@ -22,15 +17,32 @@ class GRAD_DoorLockAction : ScriptedUserAction
 			m_door = doorComp;
 			Print("m_door filled with doorComp");
 			
-			m_lockComponent = GRAD_DoorLockComponent.Cast(m_door.FindComponent(GRAD_DoorLockComponent));
+			m_lockComponent = GRAD_DoorLockComponent.Cast(pOwnerEntity.FindComponent(GRAD_DoorLockComponent));
 			if (!m_lockComponent) {
-				Print("m_lockComponent NOT found");
+				Print("m_lockComponent NOT initially set");
 				return;
 			} else {
-				m_lockComponent.ToggleLockState();
-				Print("Toggling door lock");	
+				PrintFormat("m_lockComponent initially set to %1", m_lockComponent.GetLockState());
 			}
-		}          
+		}
+	}
+	
+    //------------------------------------------------------------------------------------------------
+    override void PerformAction(IEntity pOwnerEntity, IEntity pUserEntity)
+    {
+		if (!pOwnerEntity) {
+			ShowHint("no owner", "No owner");
+			return;
+		}    
+		
+		if (!m_lockComponent) {
+			Print("m_lockComponent NOT set at runtime");
+			return;
+		} else {
+			m_lockComponent.ToggleLockState();
+			Print("Toggling door lock");	
+		}
+		        
     }
 
   

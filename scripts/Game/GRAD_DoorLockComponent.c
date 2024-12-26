@@ -9,9 +9,9 @@ class GRAD_DoorLockComponent : ScriptComponent
     bool m_isLocked;
 
     // Called when the game initializes the component
-    override void EOnInit(IEntity owner)
+    override void OnPostInit(IEntity owner)
     {
-        super.EOnInit(owner);
+        super.OnPostInit(owner);
         Print("Door Lock Component Initialized with: " + m_isLocked.ToString());
     }
 	
