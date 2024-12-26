@@ -1,8 +1,25 @@
 GenericEntity {
  ID "627CE52CCB2692FE"
  components {
-  DoorLockComponent "{6328B3D94FA43A7A}" {
+  GRAD_DoorLockComponent "{6334BA21EBF38DB6}" {
    m_isLocked 1
+  }
+  ActionsManagerComponent "{F32B667C3C823800}" {
+   additionalActions {
+    GRAD_DoorLockAction "{6334CB78E3E483F7}" {
+     ParentContextList {
+      "SCR_DoorUserAction"
+     }
+     UIInfo UIInfo "{6334CB070E1745D3}" {
+      Name "Lock Action Name"
+      Description "Lock Action Description"
+      Icon "{325A3D556BE1B85C}UI/Textures/Cursor/Editor_Drag_uiuc.edds"
+     }
+     ActionTitle "Lock"
+     VisibilityRange 0.65
+    }
+   }
+   AllowCrossHierarchy 1
   }
  }
 }

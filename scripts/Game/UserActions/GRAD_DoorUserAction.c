@@ -2,46 +2,41 @@
 //! When performed either opens or closes the door based on the previous state of the door.
 modded class SCR_DoorUserAction : DoorUserAction
 {
-	IEntity m_door;
+	DoorComponent m_door;
+	GRAD_DoorLockComponent m_doorLock;
 	
     //------------------------------------------------------------------------------------------------
     override void PerformAction(IEntity pOwnerEntity, IEntity pUserEntity)
     {
-		if (!pOwnerEntity || !pUserEntity)
-            return;
-
-        m_door = pOwnerEntity;
-		
-        // Ensure the door is not locked
-        if (IsDoorLocked())
-        {
-            ShowHint("Damn, I cannot open this", "Locked");
-            return;
-        }
+		if (!pOwnerEntity) {
+			ShowHint("No owner", "Locked");
+			Print("No owner");
+			return;
+		}
 
         DoorComponent doorComponent = GetDoorComponent();
-        if (doorComponent)
-        {
-            vector doorOpeningVecWS = pOwnerEntity.VectorToParent(vector.Forward);
-            if (doorComponent.GetAngleRange() < 0.0)
-                doorOpeningVecWS = -1.0 * doorOpeningVecWS;
-
-            vector userMat[4];
-            pUserEntity.GetWorldTransform(userMat);
-            float dotP = vector.Dot(doorOpeningVecWS, userMat[3] - doorComponent.GetDoorPivotPointWS());
-
-            // Flip the control value if it is above a threshold
-            float controlValue = 1.0;
-            float currentState = doorComponent.GetDoorState();
-            if ((dotP < 0.0 && currentState <= 0.0) || (dotP > 0.0 && currentState < 0.0))
-                controlValue = -1.0;
-            if (Math.AbsFloat(doorComponent.GetControlValue()) > 0.5)
-                controlValue = 0.0;
-
-            // Perform the action
-            doorComponent.SetActionInstigator(pUserEntity);
-            doorComponent.SetControlValue(controlValue);
-        }
+		if (!doorComponent) {
+			Print("No doorComp found in DoorUserAction");
+			return;
+		} else {
+			m_door = doorComponent;
+			Print("m_door filled with doorComponent");
+		}
+		
+		GRAD_DoorLockComponent doorLockComponent = GRAD_DoorLockComponent.Cast(pOwnerEntity.FindComponent(GRAD_DoorLockComponent));
+		if (!doorLockComponent) {
+			Print("No door-Lock-Component found in DoorUserAction");
+			return;
+		} else {
+			m_doorLock = doorLockComponent;
+			if (m_doorLock.GetLockState()) {
+				Print("door locked");
+				ShowHint("door locked", "locked", false);
+			} else {
+				Print("door not locked");
+				ShowHint("door not locked", "not locked", false);
+			}
+		}
 
         super.PerformAction(pOwnerEntity, pUserEntity);
     }
@@ -83,14 +78,12 @@ modded class SCR_DoorUserAction : DoorUserAction
     // Helper method to check if the door is locked
     private bool IsDoorLocked()
     {
-		if (!m_door)
-            return false;
+		if (!m_doorLock) {
+			Print("m_doorLock empty");
+			return false;
+		}
 
-        GRAD_DoorLockComponent lockComponent = GRAD_DoorLockComponent.Cast(m_door.FindComponent(GRAD_DoorLockComponent));
-        if (!lockComponent)
-            return false;
-
-        return lockComponent.GetLockState();
+        return m_doorLock.GetLockState();
     }
 
     // Helper method to show hints
