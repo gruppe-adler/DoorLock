@@ -9,3 +9,4 @@
 # Current Limitations/WIP
 * its possible to lock on opened state
 * there is no fallback/abuse prevention to locking someone inside a house (will probably be solved by allowing everyone inside house to unlock)
+* GM can only lock and not open from GM interface
