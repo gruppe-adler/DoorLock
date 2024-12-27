@@ -9,31 +9,31 @@ modded class SCR_DoorUserAction : DoorUserAction
     override void PerformAction(IEntity pOwnerEntity, IEntity pUserEntity)
     {
 		if (!pOwnerEntity) {
-			ShowHint("No owner", "Locked");
-			Print("No owner");
+			// ShowHint("No owner", "Locked");
+			// Print("No owner");
 			return;
 		}
 
         DoorComponent doorComponent = GetDoorComponent();
 		if (!doorComponent) {
-			Print("No doorComp found in DoorUserAction");
+			// Print("No doorComp found in DoorUserAction");
 			return;
 		} else {
 			m_door = doorComponent;
-			Print("m_door filled with doorComponent");
+			// Print("m_door filled with doorComponent");
 		}
 		
 		GRAD_DoorLockComponent doorLockComponent = GRAD_DoorLockComponent.Cast(pOwnerEntity.FindComponent(GRAD_DoorLockComponent));
 		if (!doorLockComponent) {
-			Print("No door-Lock-Component found in DoorUserAction");
+			// Print("No door-Lock-Component found in DoorUserAction");
 			return;
 		} else {
 			m_doorLock = doorLockComponent;
 			if (m_doorLock.GetLockState()) {
-				Print("door locked");
+				// Print("door locked");
 				ShowHint("door locked", "locked", false);
 			} else {
-				Print("door not locked");
+				// Print("door not locked");
 				ShowHint("door not locked", "not locked", false);
 			}
 		}
@@ -79,7 +79,7 @@ modded class SCR_DoorUserAction : DoorUserAction
     private bool IsDoorLocked()
     {
 		if (!m_doorLock) {
-			Print("m_doorLock empty");
+			// Print("m_doorLock empty");
 			return false;
 		}
 

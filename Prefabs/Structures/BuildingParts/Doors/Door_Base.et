@@ -4,21 +4,20 @@ GenericEntity {
   GRAD_DoorLockComponent "{6334CB0FEDFC0A85}" {
   }
   ActionsManagerComponent "{F32B667C3C823800}" {
+   ActionContexts {
+    UserActionContext "{50888D37F529F720}" {
+    }
+   }
    additionalActions {
-    GRAD_DoorLockAction "{6334CB78E3E483F7}" {
+    GRAD_DoorLockAction "{6336E5D46CE62597}" {
      ParentContextList {
       "SCR_DoorUserAction"
      }
-     UIInfo UIInfo "{6334CB070E1745D3}" {
-      Name "Lock Action Name"
-      Description "Lock Action Description"
-      Icon "{325A3D556BE1B85C}UI/Textures/Cursor/Editor_Drag_uiuc.edds"
+     UIInfo UIInfo "{6336E5D46A6C2814}" {
+      Name "Lock"
      }
-     ActionTitle "Lock"
-     VisibilityRange 0.65
     }
    }
-   AllowCrossHierarchy 1
   }
  }
 }
