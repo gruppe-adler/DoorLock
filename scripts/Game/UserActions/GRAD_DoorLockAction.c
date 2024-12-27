@@ -27,6 +27,20 @@ class GRAD_DoorLockAction : ScriptedUserAction
 		}
 	}
 	
+	override bool GetActionNameScript(out string outName)
+	{
+		if (!m_lockComponent)
+			return false;
+		
+		if (m_lockComponent.GetLockState()) { 
+			outName = "Unlock";
+			return true;
+		} else { 
+			outName = "Lock";
+			return true;
+		};		
+	}
+	
     //------------------------------------------------------------------------------------------------
     override void PerformAction(IEntity pOwnerEntity, IEntity pUserEntity)
     {
@@ -40,7 +54,8 @@ class GRAD_DoorLockAction : ScriptedUserAction
 			return;
 		} else {
 			m_lockComponent.ToggleLockState();
-			Print("Toggling door lock");	
+			Print("Toggling door lock");
+			
 		}
 		        
     }
