@@ -1,11 +1,6 @@
 GenericEntity {
  ID "627CE52CCB2692FE"
  components {
-  DoorComponent "{221C667A9F7D4B69}" {
-   DoorAction SCR_DoorUserAction "{50888D3646A61640}" {
-    VisibilityRange 0.65
-   }
-  }
   GRAD_DoorLockComponent "{6334CB0FEDFC0A85}" {
   }
   ActionsManagerComponent "{F32B667C3C823800}" {
@@ -14,15 +9,13 @@ GenericEntity {
     }
    }
    additionalActions {
-    GRAD_DoorLockAction "{6336B5A343B2CEC3}" {
+    GRAD_DoorLockAction "{6336E5D46CE62597}" {
      ParentContextList {
       "SCR_DoorUserAction"
      }
-     UIInfo UIInfo "{6336B5B06DC9EABB}" {
+     UIInfo UIInfo "{6336E5D46A6C2814}" {
       Name "Lock"
-      Icon "{45DB94CADA6CC2BD}UI/Textures/Workshop/FavouriteIcon.edds"
      }
-     VisibilityRange 0.65
     }
    }
   }
