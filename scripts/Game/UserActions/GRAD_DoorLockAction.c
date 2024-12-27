@@ -43,17 +43,22 @@ class GRAD_DoorLockAction : ScriptedUserAction
 	
 	//------------------------------------------------------------------------------------------------
     override bool CanBePerformedScript(IEntity user)
-    {
-        string lockOwnerString = m_lockComponent.GetLockOwner();
-		bool isGM = SCR_EditorManagerEntity.IsOpenedInstance();
+    {		
+		if (IsInside(user)) {
+			PrintFormat("Lock user is inside");
+			return true;
+		}
 		
+		string lockOwnerString = m_lockComponent.GetLockOwner();
 		SCR_ChimeraCharacter character = SCR_ChimeraCharacter.Cast(user);
+		
 		if (character) {
 			if (character.GetFactionKey() == lockOwnerString) {
 				PrintFormat("Lock Owner matches User (%1)", lockOwnerString);
 				return true;
 			}
 		} else {
+			bool isGM = SCR_EditorManagerEntity.IsOpenedInstance();
 			if (isGM) {
 				if (lockOwnerString == "GM") {
 					PrintFormat("Lock Owner matches User (GM)");
@@ -68,13 +73,64 @@ class GRAD_DoorLockAction : ScriptedUserAction
 		return false;
     }
 	
+	//------------------------------------------------------------------------------------------------
+	//! Checks whether or not an entity is inside of the building, using a trace in each world axis
+	//! \param[in] entity
+	protected bool IsInside(notnull IEntity entity)
+	{
+		IEntity owner = GetOwner();
+		BaseWorld world = owner.GetWorld();
+		vector start = entity.GetOrigin();
+		
+		TraceParam param = new TraceParam();
+		param.Flags = TraceFlags.ENTS;
+		param.LayerMask = EPhysicsLayerDefs.Projectile;
+		param.Include = owner; // Include only the building for performance reasons
+		protected static const vector TRACE_DIRECTIONS[3] = { vector.Right, vector.Up, vector.Forward };
+		
+		bool result;
+		for (int i = 0; i < 3; i++)
+		{
+			float lengthMultiplier = 1;
+			if (i == 1)
+				lengthMultiplier = 100; // Vertical traces can and must be long to detect roof, where there is no floor, also they are internally optimized
+			
+			result = PerformTrace(param, start, TRACE_DIRECTIONS[i], world, lengthMultiplier);
+			
+			if (result)
+				return true;
+		}
+		
+		return false;
+	}
+	
+	//------------------------------------------------------------------------------------------------
+	protected bool PerformTrace(notnull TraceParam param, vector start, vector direction, notnull BaseWorld world, float lengthMultiplier = 1)
+	{
+		param.Start = start - direction * lengthMultiplier;
+		param.End = start + direction * lengthMultiplier;
+		world.TraceMove(param, TraceFilter);
+		
+		return param.TraceEnt != null;
+	}
+	
+	//------------------------------------------------------------------------------------------------
+	protected bool TraceFilter(notnull IEntity e, vector start = "0 0 0", vector dir = "0 0 0")
+	{
+		return e == GetOwner();
+	}
+	
     //------------------------------------------------------------------------------------------------
     override void PerformAction(IEntity pOwnerEntity, IEntity pUserEntity)
     {
 		if (!pOwnerEntity) {
 			//	ShowHint("no owner", "No owner");
 			return;
-		}    
+		}
+		
+		if (Math.AbsFloat(m_door.GetControlValue()) < 1) {
+			ShowHint("Please close door first", "Locking impossible");
+		}
 		
 		if (!m_lockComponent) {
 			// Print("m_lockComponent NOT set at runtime");
