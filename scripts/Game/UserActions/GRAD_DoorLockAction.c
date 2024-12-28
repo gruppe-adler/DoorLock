@@ -114,13 +114,11 @@ class GRAD_DoorLockAction : ScriptedUserAction
 			ShowHint("I see no lock :/ (report to mod author)", "No lock");
 			return;
 		} else {
-			
-			
-			string lockOwnerString = m_lockComponent.GetLockOwner();
 			SCR_ChimeraCharacter character = SCR_ChimeraCharacter.Cast(pUserEntity);
 			bool isGM = SCR_EditorManagerEntity.IsOpenedInstance();
 			
-			HandleOwner(lockOwnerString, isGM, character, pUserEntity);
+			HandleOwner(isGM, character, pUserEntity);
+			string lockOwnerString = m_lockComponent.GetLockOwner();
 			
 			bool m_islocked = m_lockComponent.GetLockState();
 			bool m_canunlock = CanUseLock(lockOwnerString, isGM, character, pUserEntity, m_islocked);
@@ -133,7 +131,9 @@ class GRAD_DoorLockAction : ScriptedUserAction
 		}
     }
 	
-	private void HandleOwner(string lockOwnerString, bool isGM, SCR_ChimeraCharacter character, IEntity user) {
+	private void HandleOwner(bool isGM, SCR_ChimeraCharacter character, IEntity user) {
+		// get initial lock owner which might get overriden in this method
+		string lockOwnerString = m_lockComponent.GetLockOwner();
 		
 		// no one owns so first come first serve
 		if (lockOwnerString == "") {
@@ -152,19 +152,18 @@ class GRAD_DoorLockAction : ScriptedUserAction
 			} else {
 				Print("User is neither GM nor character, what is it?");
 			}
+		} else {
+			PrintFormat("lockOwnerString is %1 in HandleOwner", lockOwnerString);
 		}
 	}
 	
-	private bool CanUseLock(string lockOwnerString, bool isGM, SCR_ChimeraCharacter character, IEntity user, bool islocked) {
-		if (user) {
+	private bool CanUseLock(string lockOwnerString, bool isGM, SCR_ChimeraCharacter character, IEntity user, bool islocked) {		
+		if (character) {
 			PrintFormat("Checking if player is inside");
-			if (IsInside(user)) {
+			if (IsInside(character)) {
 				PrintFormat("Lock user is inside");
 				return true;
 			}
-		};
-		
-		if (character) {
 			if (character.GetFactionKey() == lockOwnerString) {
 				PrintFormat("Lock Owner matches User (%1)", lockOwnerString);
 				return true;
