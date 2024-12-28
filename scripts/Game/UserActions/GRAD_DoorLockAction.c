@@ -43,34 +43,8 @@ class GRAD_DoorLockAction : ScriptedUserAction
 	
 	//------------------------------------------------------------------------------------------------
     override bool CanBePerformedScript(IEntity user)
-    {		
-		if (IsInside(user)) {
-			PrintFormat("Lock user is inside");
-			return true;
-		}
-		
-		string lockOwnerString = m_lockComponent.GetLockOwner();
-		SCR_ChimeraCharacter character = SCR_ChimeraCharacter.Cast(user);
-		
-		if (character) {
-			if (character.GetFactionKey() == lockOwnerString) {
-				PrintFormat("Lock Owner matches User (%1)", lockOwnerString);
-				return true;
-			}
-		} else {
-			bool isGM = SCR_EditorManagerEntity.IsOpenedInstance();
-			if (isGM) {
-				if (lockOwnerString == "GM") {
-					PrintFormat("Lock Owner matches User (GM)");
-					return true;
-				}
-			}
-		}
-		// no one owns so first come first serve
-		if (lockOwnerString == "") {
-			return true;
-		}
-		return false;
+    {
+        return m_lockComponent != null;
     }
 	
 	//------------------------------------------------------------------------------------------------
@@ -121,6 +95,9 @@ class GRAD_DoorLockAction : ScriptedUserAction
 	}
 	
     //------------------------------------------------------------------------------------------------
+	// to improve performance we will do all checks on perform and not in canPerform
+	// this also allows to inform the user only on interaction and not by disabling actions "by default"
+	//------------------------------------------------------------------------------------------------
     override void PerformAction(IEntity pOwnerEntity, IEntity pUserEntity)
     {
 		if (!pOwnerEntity) {
@@ -133,26 +110,64 @@ class GRAD_DoorLockAction : ScriptedUserAction
 		}
 		
 		if (!m_lockComponent) {
-			// Print("m_lockComponent NOT set at runtime");
+			ShowHint("I see no lock :/ (report to mod author)", "No lock");
 			return;
 		} else {
-			m_lockComponent.ToggleLockState(pUserEntity);
-			// Print("Toggling door lock");
-			string lockOwnerString = m_lockComponent.GetLockOwner();
-			bool isGM = SCR_EditorManagerEntity.IsOpenedInstance();
-			SCR_ChimeraCharacter character = SCR_ChimeraCharacter.Cast(pUserEntity);
 			
-			if (lockOwnerString == "") {
-				if (isGM) {
-					m_lockComponent.SetLockOwner("GM");
-				} else {
-					if (character) {
-						m_lockComponent.SetLockOwner(character.GetFactionKey());
-					}
-				}
+			bool m_canunlock = CanUnlock(pUserEntity);
+			if (m_canunlock) {
+				m_lockComponent.ToggleLockState(pUserEntity);
+				
+				// Print("Toggling door lock");
+				string lockOwnerString = m_lockComponent.GetLockOwner();
+				bool isGM = SCR_EditorManagerEntity.IsOpenedInstance();
+				SCR_ChimeraCharacter character = SCR_ChimeraCharacter.Cast(pUserEntity);
+			} else {
+				ShowHint("I dont have a key for this door", "No key");
 			}
 		}
     }
+	
+	private bool CanUnlock(IEntity user) {
+		if (IsInside(user)) {
+			PrintFormat("Lock user is inside");
+			return true;
+		}
+		
+		string lockOwnerString = m_lockComponent.GetLockOwner();
+		SCR_ChimeraCharacter character = SCR_ChimeraCharacter.Cast(user);
+		bool isGM = SCR_EditorManagerEntity.IsOpenedInstance();
+		
+		if (character) {
+			if (character.GetFactionKey() == lockOwnerString) {
+				PrintFormat("Lock Owner matches User (%1)", lockOwnerString);
+				return true;
+			}
+		} else {
+			if (isGM) {
+				if (lockOwnerString == "GM") {
+					PrintFormat("Lock Owner matches User (GM)");
+					return true;
+				}
+			}
+		}
+		// no one owns so first come first serve
+		if (lockOwnerString == "") {
+				if (isGM) {
+					m_lockComponent.SetLockOwner("GM");
+					ShowHint("Gamemaster is lock owner now", "Lock owner change");
+				} else {
+					if (character) {
+						string m_factionKey = character.GetFactionKey();
+						m_lockComponent.SetLockOwner(m_factionKey);
+						string m_text = m_factionKey + "is lock owner now";
+						ShowHint(m_text, "Lock owner change");
+					}
+				}
+			return true;
+		}
+		return false;
+	}
 
   
     // Helper method to show hints

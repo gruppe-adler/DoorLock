@@ -31,10 +31,11 @@ modded class SCR_DoorUserAction : DoorUserAction
 			m_doorLock = doorLockComponent;
 			if (m_doorLock.GetLockState()) {
 				// Print("door locked");
-				ShowHint("door locked", "locked", false);
+				ShowHint("Door locked", "Locked", false);
+				return;
 			} else {
 				// Print("door not locked");
-				ShowHint("door not locked", "not locked", false);
+				// ShowHint("door not locked", "not locked", false);
 			}
 		}
 
@@ -44,10 +45,6 @@ modded class SCR_DoorUserAction : DoorUserAction
     //------------------------------------------------------------------------------------------------
     override bool CanBePerformedScript(IEntity user)
     {
-        // Prevent action if the door is locked
-        if (IsDoorLocked())
-            return false;
-
         DoorComponent doorComponent = GetDoorComponent();
         return doorComponent != null;
     }
@@ -58,13 +55,6 @@ modded class SCR_DoorUserAction : DoorUserAction
         DoorComponent doorComponent = GetDoorComponent();
         if (!doorComponent)
             return false;
-
-        // Prevent action name change if the door is locked
-        if (IsDoorLocked())
-        {
-            outName = "Locked"; // Or any appropriate locked message
-            return true;
-        }
 
         // Logic here is flipped since method returns the opposite of what we expect
         if (Math.AbsFloat(doorComponent.GetControlValue()) >= 0.5)
