@@ -31,7 +31,7 @@ modded class SCR_DoorUserAction : DoorUserAction
 			m_doorLock = doorLockComponent;
 			if (m_doorLock.GetLockState()) {
 				// Print("door locked");
-				ShowHint("Door locked", "Locked", false);
+				ShowHint("Door is locked", "Locked", false);
 				return;
 			} else {
 				// Print("door not locked");
@@ -77,12 +77,12 @@ modded class SCR_DoorUserAction : DoorUserAction
     }
 
     // Helper method to show hints
-    private void ShowHint(string message, string title, bool isPersistent = false)
+    private void ShowHint(string message, string title, bool isSilent = true)
     {
         SCR_HintManagerComponent hintManager = SCR_HintManagerComponent.GetInstance();
         if (!hintManager)
             return;
 
-        hintManager.ShowCustomHint(message, title, 12, isPersistent, EHint.UNDEFINED, false);
+        hintManager.ShowCustomHint(message, title, 12, isSilent, EHint.UNDEFINED, false);
     }
 };

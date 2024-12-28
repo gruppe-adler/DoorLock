@@ -100,13 +100,14 @@ class GRAD_DoorLockAction : ScriptedUserAction
 	//------------------------------------------------------------------------------------------------
     override void PerformAction(IEntity pOwnerEntity, IEntity pUserEntity)
     {
-		if (!pOwnerEntity) {
-			//	ShowHint("no owner", "No owner");
+		if (!pOwnerEntity || !m_door) {
+			Print("no owner or no m_door in DoorLockAction");
 			return;
 		}
 		
-		if (Math.AbsFloat(m_door.GetControlValue()) < 1) {
-			ShowHint("Please close door first", "Locking impossible");
+		if (Math.AbsFloat(m_door.GetControlValue()) > 0) {
+			ShowHint("Please close door first, dumbass", "Locking impossible");
+			return;
 		}
 		
 		if (!m_lockComponent) {
@@ -114,29 +115,54 @@ class GRAD_DoorLockAction : ScriptedUserAction
 			return;
 		} else {
 			
-			bool m_canunlock = CanUnlock(pUserEntity);
+			
+			string lockOwnerString = m_lockComponent.GetLockOwner();
+			SCR_ChimeraCharacter character = SCR_ChimeraCharacter.Cast(pUserEntity);
+			bool isGM = SCR_EditorManagerEntity.IsOpenedInstance();
+			
+			HandleOwner(lockOwnerString, isGM, character, pUserEntity);
+			
+			bool m_islocked = m_lockComponent.GetLockState();
+			bool m_canunlock = CanUseLock(lockOwnerString, isGM, character, pUserEntity, m_islocked);
+			
 			if (m_canunlock) {
 				m_lockComponent.ToggleLockState(pUserEntity);
-				
-				// Print("Toggling door lock");
-				string lockOwnerString = m_lockComponent.GetLockOwner();
-				bool isGM = SCR_EditorManagerEntity.IsOpenedInstance();
-				SCR_ChimeraCharacter character = SCR_ChimeraCharacter.Cast(pUserEntity);
 			} else {
 				ShowHint("I dont have a key for this door", "No key");
 			}
 		}
     }
 	
-	private bool CanUnlock(IEntity user) {
-		if (IsInside(user)) {
-			PrintFormat("Lock user is inside");
-			return true;
-		}
+	private void HandleOwner(string lockOwnerString, bool isGM, SCR_ChimeraCharacter character, IEntity user) {
 		
-		string lockOwnerString = m_lockComponent.GetLockOwner();
-		SCR_ChimeraCharacter character = SCR_ChimeraCharacter.Cast(user);
-		bool isGM = SCR_EditorManagerEntity.IsOpenedInstance();
+		// no one owns so first come first serve
+		if (lockOwnerString == "") {
+			if (isGM || character) {
+				if (isGM) {
+					m_lockComponent.SetLockOwner("GM");
+					ShowHint("Gamemaster is lock owner now", "Lock owner set");
+				}
+				// override if GM is remote controlling?
+				if (character) {
+					string m_factionKey = character.GetFactionKey();
+					m_lockComponent.SetLockOwner(m_factionKey);
+					string m_text = m_factionKey + "is lock owner now";
+					ShowHint(m_text, "Lock owner set");
+				}
+			} else {
+				Print("User is neither GM nor character, what is it?");
+			}
+		}
+	}
+	
+	private bool CanUseLock(string lockOwnerString, bool isGM, SCR_ChimeraCharacter character, IEntity user, bool islocked) {
+		if (user) {
+			PrintFormat("Checking if player is inside");
+			if (IsInside(user)) {
+				PrintFormat("Lock user is inside");
+				return true;
+			}
+		};
 		
 		if (character) {
 			if (character.GetFactionKey() == lockOwnerString) {
@@ -145,38 +171,27 @@ class GRAD_DoorLockAction : ScriptedUserAction
 			}
 		} else {
 			if (isGM) {
-				if (lockOwnerString == "GM") {
-					PrintFormat("Lock Owner matches User (GM)");
+				if (islocked) {
+					ShowHint("Unlocked door. Owner is " + lockOwnerString, "Unlocked");
+					return true;
+				} else {
+					ShowHint("Locked door. Owner is GM now", "Locked");
+					m_lockComponent.SetLockOwner("GM");
 					return true;
 				}
 			}
-		}
-		// no one owns so first come first serve
-		if (lockOwnerString == "") {
-				if (isGM) {
-					m_lockComponent.SetLockOwner("GM");
-					ShowHint("Gamemaster is lock owner now", "Lock owner change");
-				} else {
-					if (character) {
-						string m_factionKey = character.GetFactionKey();
-						m_lockComponent.SetLockOwner(m_factionKey);
-						string m_text = m_factionKey + "is lock owner now";
-						ShowHint(m_text, "Lock owner change");
-					}
-				}
-			return true;
 		}
 		return false;
 	}
 
   
     // Helper method to show hints
-    private void ShowHint(string message, string title, bool isPersistent = false)
+    private void ShowHint(string message, string title, bool isSilent = false)
     {
         SCR_HintManagerComponent hintManager = SCR_HintManagerComponent.GetInstance();
         if (!hintManager)
             return;
 
-        hintManager.ShowCustomHint(message, title, 12, isPersistent, EHint.UNDEFINED, false);
+        hintManager.ShowCustomHint(message, title, 12, isSilent, EHint.UNDEFINED, false);
     }
 };

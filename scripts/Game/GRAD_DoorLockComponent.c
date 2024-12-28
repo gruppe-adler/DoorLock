@@ -7,13 +7,13 @@ class GRAD_DoorLockComponent : ScriptComponent
     // Variables exposed to the editor
     [Attribute("0", UIWidgets.CheckBox, "Door Lock State", "" )]
     bool m_isLocked;
-	string m_lockOwner;
+	string m_lockOwner = "";
 
     // Called when the game initializes the component
     override void OnPostInit(IEntity owner)
     {
         super.OnPostInit(owner);
-        Print("Door Lock Component Initialized with: " + m_isLocked.ToString());
+        // Print("Door Lock Component Initialized with: " + m_isLocked.ToString());
     }
 	
 	bool GetLockState() 
