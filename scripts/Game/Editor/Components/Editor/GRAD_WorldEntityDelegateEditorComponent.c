@@ -63,9 +63,12 @@ modded class SCR_WorldEntityDelegateEditorComponent: SCR_BaseEditorComponent
 				{
 					BaseActionsManagerComponent actionsManager = BaseActionsManagerComponent.Cast(traceEntity.FindComponent(BaseActionsManagerComponent));
 					
-					// Print("GRAD_WorldEntityDelegateEditorComponent entered");
-					// GRAD changed: removed limitation that action is only shown if one exists
-					if (actionsManager)
+					/* Print("GRAD_WorldEntityDelegateEditorComponent entered");
+					 originally: if (actionsManager && actionsManager.GetActionsCount() == 1)
+					 GRAD changed: removed limitation that action is only shown if one exists
+					 only allow multiple actions for doors */
+					DoorComponent doorComponent = DoorComponent.Cast(traceEntity.FindComponent(DoorComponent));
+					if (actionsManager && actionsManager.GetActionsCount() == 1 || actionsManager && doorComponent)
 					{
 						ScriptedUserAction action = ScriptedUserAction.Cast(actionsManager.GetFirstAction());
 						m_bHasDelegate = action && action.CanBePerformed(GetManager());

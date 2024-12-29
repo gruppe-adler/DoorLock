@@ -5,10 +5,13 @@ class GRAD_DoorLockAction : ScriptedUserAction
 {
 	DoorComponent m_door;
 	GRAD_DoorLockComponent m_lockComponent;
+	IEntity m_building;
 	
 	override void Init(IEntity pOwnerEntity, GenericComponent pManagerComponent) {
 		
 		DoorComponent doorComp = DoorComponent.Cast(pOwnerEntity.FindComponent(DoorComponent));
+		
+		m_building = pOwnerEntity;
 		
 		if (!doorComp) {
 			// Print("No doorComp found in DoorLockAction");
@@ -52,7 +55,8 @@ class GRAD_DoorLockAction : ScriptedUserAction
 	//! \param[in] entity
 	protected bool IsInside(notnull IEntity entity)
 	{
-		IEntity owner = GetOwner();
+		IEntity owner = m_building.GetParent(); // should get building?
+		PrintFormat("owner of parent of lockcomponent is %1 - building is %2", owner, m_building);
 		BaseWorld world = owner.GetWorld();
 		vector start = entity.GetOrigin();
 		
@@ -147,7 +151,7 @@ class GRAD_DoorLockAction : ScriptedUserAction
 					string m_factionKey = character.GetFactionKey();
 					m_lockComponent.SetLockOwner(m_factionKey);
 					string m_text = m_factionKey + "is lock owner now";
-					ShowHint(m_text, "Lock owner set");
+					// ShowHint(m_text, "Lock owner set");
 				}
 			} else {
 				Print("User is neither GM nor character, what is it?");
@@ -159,19 +163,20 @@ class GRAD_DoorLockAction : ScriptedUserAction
 	
 	private bool CanUseLock(string lockOwnerString, bool isGM, SCR_ChimeraCharacter character, IEntity user, bool islocked) {		
 		if (character) {
-			PrintFormat("Checking if player is inside");
+			PrintFormat("Checking if player is inside - lockOwnerString %1 - character factionKey %2", lockOwnerString, character.GetFactionKey());
 			if (IsInside(character)) {
 				PrintFormat("Lock user is inside");
 				return true;
 			}
-			if (character.GetFactionKey() == lockOwnerString) {
-				PrintFormat("Lock Owner matches User (%1)", lockOwnerString);
+			if (character.GetFactionKey() == lockOwnerString || character.GetFactionKey() == "") {
+				PrintFormat("Lock Owner matches User or is empty (%1)", lockOwnerString);
 				return true;
 			}
 		} else {
 			if (isGM) {
 				if (islocked) {
-					ShowHint("Unlocked door. Owner is " + lockOwnerString, "Unlocked");
+					ShowHint("Unlocked door. Lock has no owner anymore", "Unlocked");
+					m_lockComponent.SetLockOwner("");
 					return true;
 				} else {
 					ShowHint("Locked door. Owner is GM now", "Locked");
@@ -187,10 +192,13 @@ class GRAD_DoorLockAction : ScriptedUserAction
     // Helper method to show hints
     private void ShowHint(string message, string title, bool isSilent = false)
     {
-        SCR_HintManagerComponent hintManager = SCR_HintManagerComponent.GetInstance();
-        if (!hintManager)
-            return;
 
-        hintManager.ShowCustomHint(message, title, 12, isSilent, EHint.UNDEFINED, false);
+        // SCR_HintManagerComponent seems to be triggered globally, so we use SCR_PopUpNotification
+		SCR_HintManagerComponent hintManager = SCR_HintManagerComponent.GetInstance();
+		if (!hintManager)
+			return;
+
+		SCR_HintUIInfo hintInfo = SCR_HintUIInfo.CreateInfo(title, message, -1, EHint.UNDEFINED, EFieldManualEntryId.NONE, true);
+		SCR_HintManagerComponent.ShowHint(hintInfo);
     }
 };

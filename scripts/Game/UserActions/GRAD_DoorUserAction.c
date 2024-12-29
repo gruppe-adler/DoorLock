@@ -31,7 +31,8 @@ modded class SCR_DoorUserAction : DoorUserAction
 			m_doorLock = doorLockComponent;
 			if (m_doorLock.GetLockState()) {
 				// Print("door locked");
-				ShowHint("Door is locked", "Locked", false);
+				// ShowHint("Door is locked", "Locked", false);
+				AudioSystem.PlaySound("{9024CA9E5A402E55}sounds/grad_doorlock_locked.wav");
 				return;
 			} else {
 				// Print("door not locked");
@@ -46,7 +47,12 @@ modded class SCR_DoorUserAction : DoorUserAction
     override bool CanBePerformedScript(IEntity user)
     {
         DoorComponent doorComponent = GetDoorComponent();
-        return doorComponent != null;
+		
+		if (doorComponent) {
+			return !IsDoorLocked();
+		} else {
+			return false;
+		}
     }
 
     //------------------------------------------------------------------------------------------------
@@ -75,14 +81,17 @@ modded class SCR_DoorUserAction : DoorUserAction
 
         return m_doorLock.GetLockState();
     }
+	
+	
 
     // Helper method to show hints
     private void ShowHint(string message, string title, bool isSilent = true)
     {
-        SCR_HintManagerComponent hintManager = SCR_HintManagerComponent.GetInstance();
-        if (!hintManager)
-            return;
+        // SCR_HintManagerComponent seems to be triggered globally, so we use SCR_PopUpNotification
+		SCR_PopUpNotification popupNotifications = SCR_PopUpNotification.GetInstance();
+		if (!popupNotifications)
+			return;
 
-        hintManager.ShowCustomHint(message, title, 12, isSilent, EHint.UNDEFINED, false);
+		popupNotifications.PopupMsg(text: title, duration: 5, text2: message);
     }
 };

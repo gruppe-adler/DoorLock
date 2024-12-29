@@ -5,7 +5,7 @@ class GRAD_DoorLockComponentClass : ScriptComponentClass {
 class GRAD_DoorLockComponent : ScriptComponent
 {
     // Variables exposed to the editor
-    [Attribute("0", UIWidgets.CheckBox, "Door Lock State", "" )]
+	[RplProp()]  
     bool m_isLocked;
 	string m_lockOwner = "";
 
@@ -49,26 +49,19 @@ class GRAD_DoorLockComponent : ScriptComponent
 		}
 		
 		if (m_isLocked) {
-       		ShowHint("door unlocked", "Unlocked");
+			AudioSystem.PlaySound("{8636DEE6CA8BB1AE}sounds/grad_doorlock_1.wav");
+			m_isLocked = false;
+			Replication.BumpMe();
 		} else {
-        	ShowHint("door locked", "Locked");
+			AudioSystem.PlaySound("{8636DEE6CA8BB1AE}sounds/grad_doorlock_2.wav");
+			m_isLocked = true;
+			Replication.BumpMe();
 		}
-		m_isLocked = !m_isLocked;
-		Print("Door Lock Component set to: " + m_isLocked.ToString());
+		Print("Door Lock Component set to: " + m_isLocked.ToString());		
 	}
 	
 	void SetLockOwner(string lockOwner) {
 		m_lockOwner = lockOwner;
 		PrintFormat("Lock Owner set to %1", lockOwner);
 	}
-	
-	// Helper method to show hints
-    private void ShowHint(string message, string title, bool isPersistent = false)
-    {
-        SCR_HintManagerComponent hintManager = SCR_HintManagerComponent.GetInstance();
-        if (!hintManager)
-            return;
-
-        hintManager.ShowCustomHint(message, title, 12, isPersistent, EHint.UNDEFINED, false);
-    }
 }
