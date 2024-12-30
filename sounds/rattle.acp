@@ -48,7 +48,7 @@ AudioClass {
  sounds {
   SoundClass {
    id 3081
-   name "SOUND_DOOR_LOCK_2"
+   name "SOUND_DOOR_LOCK_RATTLE"
    version 5
    tl 104.222 -28.333
    ins {
@@ -89,7 +89,7 @@ AudioClass {
     }
    }
    pi {
-    49152 0
+    16384 0
    }
    path "{B764D803219C775E}Sounds/FinalMix.afm"
    inputs {
@@ -188,7 +188,7 @@ AudioClass {
    tl -443.333 -113.333
    Samples {
     AudioBankSampleClass Sample {
-     Filename "{DBD0BD5FEA93EC7F}sounds/grad_doorlock_2.wav"
+     Filename "{9024CA9E5A402E55}sounds/grad_doorlock_locked.wav"
     }
    }
   }

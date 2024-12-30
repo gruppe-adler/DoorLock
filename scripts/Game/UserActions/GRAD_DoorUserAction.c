@@ -32,7 +32,8 @@ modded class SCR_DoorUserAction : DoorUserAction
 			if (m_doorLock.GetLockState()) {
 				// Print("door locked");
 				// ShowHint("Door is locked", "Locked", false);
-				AudioSystem.PlaySound("{9024CA9E5A402E55}sounds/grad_doorlock_locked.wav");
+				doorLockComponent.playSound(true, pOwnerEntity, false);
+				
 				return;
 			} else {
 				// Print("door not locked");
