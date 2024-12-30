@@ -86,7 +86,12 @@ class GRAD_DoorLockComponent : ScriptComponent
 		
 		Print("audioSource played");
 		
-		soundManagerEntity.CreateAndPlayAudioSource(pOwnerEntity, audioConfig);
+		vector mat[4];
+        IEntity owner = pOwnerEntity; // GetOwner();
+        owner.GetTransform(mat);        
+        mat[3] = owner.CoordToParent(m_vSoundOffset);
+                    
+        soundManagerEntity.PlayAudioSource(audioSource, mat);  
 	}
 	
 	void SetLockOwner(string lockOwner) {
