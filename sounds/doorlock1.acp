@@ -1,0 +1,35 @@
+AudioClass {
+ sounds {
+  SoundClass {
+   id 3081
+   name "door_lock_1"
+   version 5
+   tl -1 -61
+   ins {
+    ConnectionsClass connections {
+     id 64
+     links {
+      ConnectionClass connection {
+       id 2052
+       port 65
+      }
+     }
+    }
+   }
+  }
+ }
+ banks_local {
+  BankLocalClass {
+   id 2052
+   name "Bank1"
+   version 7
+   tl -233 -60
+   Samples {
+    AudioBankSampleClass Sample {
+     Filename "{8636DEE6CA8BB1AE}sounds/grad_doorlock_1.wav"
+    }
+   }
+  }
+ }
+ version 1
+}

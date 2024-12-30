@@ -11,7 +11,7 @@ class GRAD_DoorLockAction : ScriptedUserAction
 		
 		DoorComponent doorComp = DoorComponent.Cast(pOwnerEntity.FindComponent(DoorComponent));
 		
-		m_building = pOwnerEntity;
+		m_building = pOwnerEntity.GetRootParent();
 		
 		if (!doorComp) {
 			// Print("No doorComp found in DoorLockAction");
@@ -50,53 +50,6 @@ class GRAD_DoorLockAction : ScriptedUserAction
         return m_lockComponent != null;
     }
 	
-	//------------------------------------------------------------------------------------------------
-	//! Checks whether or not an entity is inside of the building, using a trace in each world axis
-	//! \param[in] entity
-	protected bool IsInside(notnull IEntity entity)
-	{
-		IEntity owner = m_building.GetParent(); // should get building?
-		PrintFormat("owner of parent of lockcomponent is %1 - building is %2", owner, m_building);
-		BaseWorld world = owner.GetWorld();
-		vector start = entity.GetOrigin();
-		
-		TraceParam param = new TraceParam();
-		param.Flags = TraceFlags.ENTS;
-		param.LayerMask = EPhysicsLayerDefs.Projectile;
-		param.Include = owner; // Include only the building for performance reasons
-		protected static const vector TRACE_DIRECTIONS[3] = { vector.Right, vector.Up, vector.Forward };
-		
-		bool result;
-		for (int i = 0; i < 3; i++)
-		{
-			float lengthMultiplier = 1;
-			if (i == 1)
-				lengthMultiplier = 100; // Vertical traces can and must be long to detect roof, where there is no floor, also they are internally optimized
-			
-			result = PerformTrace(param, start, TRACE_DIRECTIONS[i], world, lengthMultiplier);
-			
-			if (result)
-				return true;
-		}
-		
-		return false;
-	}
-	
-	//------------------------------------------------------------------------------------------------
-	protected bool PerformTrace(notnull TraceParam param, vector start, vector direction, notnull BaseWorld world, float lengthMultiplier = 1)
-	{
-		param.Start = start - direction * lengthMultiplier;
-		param.End = start + direction * lengthMultiplier;
-		world.TraceMove(param, TraceFilter);
-		
-		return param.TraceEnt != null;
-	}
-	
-	//------------------------------------------------------------------------------------------------
-	protected bool TraceFilter(notnull IEntity e, vector start = "0 0 0", vector dir = "0 0 0")
-	{
-		return e == GetOwner();
-	}
 	
     //------------------------------------------------------------------------------------------------
 	// to improve performance we will do all checks on perform and not in canPerform
@@ -163,11 +116,18 @@ class GRAD_DoorLockAction : ScriptedUserAction
 	
 	private bool CanUseLock(string lockOwnerString, bool isGM, SCR_ChimeraCharacter character, IEntity user, bool islocked) {		
 		if (character) {
-			PrintFormat("Checking if player is inside - lockOwnerString %1 - character factionKey %2", lockOwnerString, character.GetFactionKey());
-			if (IsInside(character)) {
-				PrintFormat("Lock user is inside");
-				return true;
+			
+			float gInterior = GetGame().GetSignalsManager().GetSignalValue(GetGame().GetSignalsManager().AddOrFindSignal("GInterior"));
+
+			// players inside house can always unlock to prevent abuse / stuck players
+			if (gInterior) {
+				PrintFormat("gInterior %1 found", gInterior);
+				if (gInterior == 1) {
+					return true;
+					PrintFormat("player is inside");
+				}
 			}
+			
 			if (character.GetFactionKey() == lockOwnerString || character.GetFactionKey() == "") {
 				PrintFormat("Lock Owner matches User or is empty (%1)", lockOwnerString);
 				return true;

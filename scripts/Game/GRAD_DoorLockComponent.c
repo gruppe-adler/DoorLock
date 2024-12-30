@@ -49,15 +49,44 @@ class GRAD_DoorLockComponent : ScriptComponent
 		}
 		
 		if (m_isLocked) {
-			AudioSystem.PlaySound("{8636DEE6CA8BB1AE}sounds/grad_doorlock_1.wav");
+			playSound(true, pUserEntity);
 			m_isLocked = false;
 			Replication.BumpMe();
 		} else {
-			AudioSystem.PlaySound("{8636DEE6CA8BB1AE}sounds/grad_doorlock_2.wav");
+			playSound(false, pUserEntity);
 			m_isLocked = true;
 			Replication.BumpMe();
 		}
 		Print("Door Lock Component set to: " + m_isLocked.ToString());		
+	}
+	
+	void playSound (bool locked, IEntity pOwnerEntity) {
+		
+		SCR_SoundManagerEntity soundManagerEntity = GetGame().GetSoundManagerEntity();
+		if (!soundManagerEntity)
+			return;
+		
+		Print("soundmanager exists");
+		
+		private vector m_vSoundOffset;
+		
+		SCR_AudioSourceConfiguration audioConfig = new SCR_AudioSourceConfiguration();
+		audioConfig.m_sSoundProject = "{604949E18452E5D5}sounds/doorlock1.acp";
+		audioConfig.m_sSoundEventName = "door_lock_1";
+		audioConfig.m_eFlags = EAudioSourceConfigurationFlag.FinishWhenEntityDestroyed;	
+		
+		if (!audioConfig || !audioConfig.IsValid())
+			return;
+		
+		Print("audioConfig valid");
+		
+		SCR_AudioSource audioSource = soundManagerEntity.CreateAudioSource(pOwnerEntity, audioConfig);
+		if (!audioSource)
+			return;
+		
+		Print("audioSource played");
+		
+		soundManagerEntity.CreateAndPlayAudioSource(pOwnerEntity, audioConfig);
 	}
 	
 	void SetLockOwner(string lockOwner) {
