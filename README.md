@@ -1,3 +1,5 @@
+<img src="https://github.com/gruppe-adler/DoorLock/blob/main/thumbnail.png" width="350px" />
+
 ### Reforger Mod
 # GRAD DoorLock
 
