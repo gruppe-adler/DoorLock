@@ -5,13 +5,17 @@ class GRAD_DoorLockComponentClass : ScriptComponentClass {
 class GRAD_DoorLockComponent : ScriptComponent
 {
     // Variables exposed to the editor
-	[RplProp()]  
+	[RplProp()]
     bool m_isLocked;
+		
+	[RplProp()]
 	string m_lockOwner = "";
 
     // Called when the game initializes the component
     override void OnPostInit(IEntity owner)
     {
+		Replication.BumpMe();
+		
         super.OnPostInit(owner);
         // Print("Door Lock Component Initialized with: " + m_isLocked.ToString());
     }
@@ -87,6 +91,7 @@ class GRAD_DoorLockComponent : ScriptComponent
 	
 	void SetLockOwner(string lockOwner) {
 		m_lockOwner = lockOwner;
+		Replication.BumpMe();
 		PrintFormat("Lock Owner set to %1", lockOwner);
 	}
 }
