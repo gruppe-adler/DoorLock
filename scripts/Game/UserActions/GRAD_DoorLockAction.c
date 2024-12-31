@@ -49,18 +49,32 @@ class GRAD_DoorLockAction : ScriptedUserAction
 			return;
 		}
 		
+		// avoid double execution
+		//		if (!Replication.IsServer()) return;
+		
 		SCR_ChimeraCharacter character = SCR_ChimeraCharacter.Cast(pUserEntity);
         bool isGM = SCR_EditorManagerEntity.IsOpenedInstance();
         string lockOwnerString = m_lockComponent.GetLockOwner();
         bool isLocked = m_lockComponent.GetLockState();
+		
+		// dirty double execution / local only check 
+		if (!isGM) {
+			if (SCR_PossessingManagerComponent.GetPlayerIdFromControlledEntity(pUserEntity) != SCR_PlayerController.GetLocalPlayerId())
+			return;
+		} else {
+			SCR_PlayerController playerController = SCR_PlayerController.Cast(GetGame().GetPlayerController());
+			int playerID = playerController.GetPlayerId();
+			if (playerID != SCR_PlayerController.GetLocalPlayerId())
+			return;
+		}
 
         if (CanUseLock(lockOwnerString, isGM, character, pUserEntity, pOwnerEntity, isLocked)) {
             m_lockComponent.ToggleLockState(pUserEntity, pOwnerEntity.GetParent(), !isLocked);
         } else {
 			if (character.GetFactionKey() == lockOwnerString || lockOwnerString.IsEmpty()) {
-            	ShowNotification(ENotification.GRAD_DOORLOCK_CLOSE_FIRST, pUserEntity, false);
+            	ShowNotification(ENotification.GRAD_DOORLOCK_CLOSE_FIRST, pUserEntity, isGM);
 			} else {
-				ShowNotification(ENotification.GRAD_DOORLOCK_NO_KEY, pUserEntity, false);
+				ShowNotification(ENotification.GRAD_DOORLOCK_NO_KEY, pUserEntity, isGM);
 			}
         }
     }
@@ -72,7 +86,6 @@ class GRAD_DoorLockAction : ScriptedUserAction
 			Print("no m_door in DoorLockAction");
 			return false;
 		}
-		
 		
 		if (Math.AbsFloat(m_door.GetControlValue()) > 0) {
 			return false;
