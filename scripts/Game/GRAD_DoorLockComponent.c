@@ -4,18 +4,16 @@ class GRAD_DoorLockComponentClass : ScriptComponentClass {
 
 class GRAD_DoorLockComponent : ScriptComponent
 {
-    // Variables exposed to the editor
+    // synced attributes
 	[RplProp()]
-    bool m_isLocked;
+    protected bool m_isLocked;
 		
 	[RplProp()]
-	string m_lockOwner = "";
+	protected string m_lockOwner = "";
 
     // Called when the game initializes the component
     override void OnPostInit(IEntity owner)
-    {
-		Replication.BumpMe();
-		
+    {	
         super.OnPostInit(owner);
         // Print("Door Lock Component Initialized with: " + m_isLocked.ToString());
     }
@@ -30,15 +28,15 @@ class GRAD_DoorLockComponent : ScriptComponent
 		return m_lockOwner;
 	}
 	
-	void ToggleLockState(IEntity pUserEntity, IEntity door)
+	void ToggleLockState(IEntity pUserEntity, IEntity door, bool targetState)
 	{	
-		if (m_isLocked) {
+		if (targetState) {
 			playSound(true, door, true);
-			m_isLocked = false;
+			m_isLocked = targetState;
 			Replication.BumpMe();
 		} else {
 			playSound(false, door, true);
-			m_isLocked = true;
+			m_isLocked = targetState;
 			Replication.BumpMe();
 		}
 		// Print("Door Lock Component set to: " + m_isLocked.ToString());		

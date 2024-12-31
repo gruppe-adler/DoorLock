@@ -9,12 +9,12 @@ class GRAD_DoorLockAction : ScriptedUserAction
 	
 	override void Init(IEntity pOwnerEntity, GenericComponent pManagerComponent) {
 		
-		 m_door = DoorComponent.Cast(pOwnerEntity.FindComponent(DoorComponent));
-        m_building = pOwnerEntity.GetRootParent();
-
-        if (!m_door) return;
+		m_door = DoorComponent.Cast(pOwnerEntity.FindComponent(DoorComponent));
+		m_building = pOwnerEntity.GetRootParent();
 		
 		m_lockComponent = GRAD_DoorLockComponent.Cast(pOwnerEntity.FindComponent(GRAD_DoorLockComponent));
+		
+		super.Init(pOwnerEntity, pManagerComponent);
 	}
 	
 	override bool GetActionNameScript(out string outName)
@@ -49,26 +49,36 @@ class GRAD_DoorLockAction : ScriptedUserAction
 			return;
 		}
 		
-		if (Math.AbsFloat(m_door.GetControlValue()) > 0) {
-			ShowNotification(ENotification.GRAD_DOORLOCK_CLOSE_FIRST, pUserEntity, false);
-			return;
-		}
-		
 		SCR_ChimeraCharacter character = SCR_ChimeraCharacter.Cast(pUserEntity);
         bool isGM = SCR_EditorManagerEntity.IsOpenedInstance();
         string lockOwnerString = m_lockComponent.GetLockOwner();
         bool isLocked = m_lockComponent.GetLockState();
 
         if (CanUseLock(lockOwnerString, isGM, character, pUserEntity, pOwnerEntity, isLocked)) {
-            m_lockComponent.ToggleLockState(pUserEntity, pOwnerEntity.GetParent());
+            m_lockComponent.ToggleLockState(pUserEntity, pOwnerEntity.GetParent(), !isLocked);
         } else {
-            ShowNotification(ENotification.GRAD_DOORLOCK_NO_KEY, pUserEntity, false);
+			if (character.GetFactionKey() == lockOwnerString || lockOwnerString.IsEmpty()) {
+            	ShowNotification(ENotification.GRAD_DOORLOCK_CLOSE_FIRST, pUserEntity, false);
+			} else {
+				ShowNotification(ENotification.GRAD_DOORLOCK_NO_KEY, pUserEntity, false);
+			}
         }
     }
 	
 	
 	private bool CanUseLock(string lockOwnerString, bool isGM, SCR_ChimeraCharacter character, IEntity pUserEntity, IEntity pOwnerEntity, bool isLocked) {
-        if (character && !isGM) {
+        
+		if (!m_door) {
+			Print("no m_door in DoorLockAction");
+			return false;
+		}
+		
+		
+		if (Math.AbsFloat(m_door.GetControlValue()) > 0) {
+			return false;
+		}
+		
+		if (character && !isGM) {
             float gInterior = GetGame().GetSignalsManager().GetSignalValue(
                 GetGame().GetSignalsManager().AddOrFindSignal("GInterior")
             );
@@ -106,6 +116,9 @@ class GRAD_DoorLockAction : ScriptedUserAction
 	
 	private void ShowNotification(ENotification message, IEntity pUserEntity, bool isGM) {		
 		int playerID = GetGame().GetPlayerManager().GetPlayerIdFromControlledEntity(pUserEntity);
+		if (isGM) {
+			playerID = SCR_PlayerController.GetLocalPlayerId();
+		}
 				
 		bool thatworked = SCR_NotificationsComponent.SendToUnlimitedEditorPlayersAndPlayer(playerID, message, playerID); // SCR_NotificationsComponent.SendToPlayer(playerID, message);
 		PrintFormat("Notification sent: %1", thatworked);
