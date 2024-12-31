@@ -50,7 +50,7 @@ class GRAD_DoorLockAction : ScriptedUserAction
 		}
 		
 		if (Math.AbsFloat(m_door.GetControlValue()) > 0) {
-			ShowNotification(ENotification.GRAD_DOORLOCK_CLOSE_FIRST, pUserEntity);
+			ShowNotification(ENotification.GRAD_DOORLOCK_CLOSE_FIRST, pUserEntity, false);
 			return;
 		}
 		
@@ -59,15 +59,15 @@ class GRAD_DoorLockAction : ScriptedUserAction
         string lockOwnerString = m_lockComponent.GetLockOwner();
         bool isLocked = m_lockComponent.GetLockState();
 
-        if (CanUseLock(lockOwnerString, isGM, character, pUserEntity, isLocked)) {
+        if (CanUseLock(lockOwnerString, isGM, character, pUserEntity, pOwnerEntity, isLocked)) {
             m_lockComponent.ToggleLockState(pUserEntity, pOwnerEntity.GetParent());
         } else {
-            ShowNotification(ENotification.GRAD_DOORLOCK_NO_KEY, pUserEntity);
+            ShowNotification(ENotification.GRAD_DOORLOCK_NO_KEY, pUserEntity, false);
         }
     }
 	
 	
-	private bool CanUseLock(string lockOwnerString, bool isGM, SCR_ChimeraCharacter character, IEntity pUserEntity, bool isLocked) {
+	private bool CanUseLock(string lockOwnerString, bool isGM, SCR_ChimeraCharacter character, IEntity pUserEntity, IEntity pOwnerEntity, bool isLocked) {
         if (character && !isGM) {
             float gInterior = GetGame().GetSignalsManager().GetSignalValue(
                 GetGame().GetSignalsManager().AddOrFindSignal("GInterior")
@@ -89,12 +89,13 @@ class GRAD_DoorLockAction : ScriptedUserAction
                 return true;
             }
         } else if (isGM) {
+
             if (isLocked) {
-                ShowNotification(ENotification.GRAD_DOORLOCK_GM_UNLOCKED, pUserEntity);
+                ShowNotification(ENotification.GRAD_DOORLOCK_GM_UNLOCKED, pUserEntity, true);
                 m_lockComponent.SetLockOwner("");
             } else {
 				// GM locked doors cant be opened by players
-                ShowNotification(ENotification.GRAD_DOORLOCK_GM_LOCKED, pUserEntity);
+                ShowNotification(ENotification.GRAD_DOORLOCK_GM_LOCKED, pUserEntity, true);
                 m_lockComponent.SetLockOwner("GM");
             }
             return true;
@@ -102,26 +103,10 @@ class GRAD_DoorLockAction : ScriptedUserAction
 
         return false;
     }
-
-  
-    // Helper method to show hints
-    private void ShowHint(string message, string title, bool isSilent = false)
-    {
-
-        // SCR_HintManagerComponent seems to be triggered globally, so we use SCR_PopUpNotification
-		SCR_HintManagerComponent hintManager = SCR_HintManagerComponent.GetInstance();
-		if (!hintManager)
-			return;
-
-		SCR_HintUIInfo hintInfo = SCR_HintUIInfo.CreateInfo(title, message, -1, EHint.UNDEFINED, EFieldManualEntryId.NONE, true);
-		SCR_HintManagerComponent.ShowHint(hintInfo);
-    }
 	
-	private void ShowNotification(ENotification message, IEntity pUserEntity) {		
-		
+	private void ShowNotification(ENotification message, IEntity pUserEntity, bool isGM) {		
 		int playerID = GetGame().GetPlayerManager().GetPlayerIdFromControlledEntity(pUserEntity);
-		
-		
+				
 		bool thatworked = SCR_NotificationsComponent.SendToUnlimitedEditorPlayersAndPlayer(playerID, message, playerID); // SCR_NotificationsComponent.SendToPlayer(playerID, message);
 		PrintFormat("Notification sent: %1", thatworked);
 	}
