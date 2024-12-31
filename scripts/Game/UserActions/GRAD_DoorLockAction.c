@@ -50,7 +50,7 @@ class GRAD_DoorLockAction : ScriptedUserAction
 		}
 		
 		if (Math.AbsFloat(m_door.GetControlValue()) > 0) {
-			ShowHint("Please close door first, dumbass", "Locking impossible");
+			ShowNotification(ENotification.GRAD_DOORLOCK_CLOSE_FIRST, pUserEntity);
 			return;
 		}
 		
@@ -62,12 +62,12 @@ class GRAD_DoorLockAction : ScriptedUserAction
         if (CanUseLock(lockOwnerString, isGM, character, pUserEntity, isLocked)) {
             m_lockComponent.ToggleLockState(pUserEntity, pOwnerEntity.GetParent());
         } else {
-            ShowHint("You don't have a key for this door", "No key");
+            ShowNotification(ENotification.GRAD_DOORLOCK_NO_KEY, pUserEntity);
         }
     }
 	
 	
-	private bool CanUseLock(string lockOwnerString, bool isGM, SCR_ChimeraCharacter character, IEntity user, bool isLocked) {
+	private bool CanUseLock(string lockOwnerString, bool isGM, SCR_ChimeraCharacter character, IEntity pUserEntity, bool isLocked) {
         if (character && !isGM) {
             float gInterior = GetGame().GetSignalsManager().GetSignalValue(
                 GetGame().GetSignalsManager().AddOrFindSignal("GInterior")
@@ -90,11 +90,11 @@ class GRAD_DoorLockAction : ScriptedUserAction
             }
         } else if (isGM) {
             if (isLocked) {
-                ShowHint("Unlocked door. Lock has no owner anymore.", "Unlocked");
+                ShowNotification(ENotification.GRAD_DOORLOCK_GM_UNLOCKED, pUserEntity);
                 m_lockComponent.SetLockOwner("");
             } else {
 				// GM locked doors cant be opened by players
-                ShowHint("Locked door. Owner is now GM.", "Locked");
+                ShowNotification(ENotification.GRAD_DOORLOCK_GM_LOCKED, pUserEntity);
                 m_lockComponent.SetLockOwner("GM");
             }
             return true;
@@ -116,4 +116,13 @@ class GRAD_DoorLockAction : ScriptedUserAction
 		SCR_HintUIInfo hintInfo = SCR_HintUIInfo.CreateInfo(title, message, -1, EHint.UNDEFINED, EFieldManualEntryId.NONE, true);
 		SCR_HintManagerComponent.ShowHint(hintInfo);
     }
+	
+	private void ShowNotification(ENotification message, IEntity pUserEntity) {		
+		
+		int playerID = GetGame().GetPlayerManager().GetPlayerIdFromControlledEntity(pUserEntity);
+		
+		
+		bool thatworked = SCR_NotificationsComponent.SendToUnlimitedEditorPlayersAndPlayer(playerID, message, playerID); // SCR_NotificationsComponent.SendToPlayer(playerID, message);
+		PrintFormat("Notification sent: %1", thatworked);
+	}
 };

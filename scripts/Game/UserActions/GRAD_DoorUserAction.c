@@ -82,17 +82,4 @@ modded class SCR_DoorUserAction : DoorUserAction
 
         return m_doorLock.GetLockState();
     }
-	
-	
-
-    // Helper method to show hints
-    private void ShowHint(string message, string title, bool isSilent = true)
-    {
-        // SCR_HintManagerComponent seems to be triggered globally, so we use SCR_PopUpNotification
-		SCR_PopUpNotification popupNotifications = SCR_PopUpNotification.GetInstance();
-		if (!popupNotifications)
-			return;
-
-		popupNotifications.PopupMsg(text: title, duration: 5, text2: message);
-    }
 };

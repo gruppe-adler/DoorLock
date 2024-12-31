@@ -27,27 +27,7 @@ class GRAD_DoorLockComponent : ScriptComponent
 	}
 	
 	void ToggleLockState(IEntity pUserEntity, IEntity door)
-	{
-		
-		// get user identity to set lock side
-		/*
-		if (!m_lockOwner) {
-			if (pUserEntity) {
-				PrintFormat("pUserEntity: %1", pUserEntity);
-				if (SCR_EditorManagerEntity.IsOpenedInstance()) {
-				} else {
-					SCR_ChimeraCharacter character = SCR_ChimeraCharacter.Cast(pUserEntity);
-					if (character) {
-						SetLockOwner(character.GetFactionKey());
-						PrintFormat("Setting Lock to ", character.GetFactionKey());
-					}
-				};
-			} else {
-				Print("pUserEntity is empty");
-			}
-		}
-		*/
-		
+	{	
 		if (m_isLocked) {
 			playSound(true, door, true);
 			m_isLocked = false;
@@ -57,7 +37,7 @@ class GRAD_DoorLockComponent : ScriptComponent
 			m_isLocked = true;
 			Replication.BumpMe();
 		}
-		Print("Door Lock Component set to: " + m_isLocked.ToString());		
+		// Print("Door Lock Component set to: " + m_isLocked.ToString());		
 	}
 	
 	void playSound (bool locked, IEntity pOwnerEntity, bool canUnlock) {
@@ -66,7 +46,7 @@ class GRAD_DoorLockComponent : ScriptComponent
 		if (!soundManagerEntity)
 			return;
 		
-		Print("soundmanager exists");
+		// Print("soundmanager exists");
 		
 		private vector m_vSoundOffset;
 		
@@ -85,10 +65,7 @@ class GRAD_DoorLockComponent : ScriptComponent
 		
 		soundManagerEntity.CreateAndPlayAudioSource(pOwnerEntity, audioConfig);
 		
-		PrintFormat("audioConfig is %2, pOwnerEntity is %1", pOwnerEntity, audioConfig);
-		
-		
-		Print("audioSource played");
+		// PrintFormat("audioConfig is %2, pOwnerEntity is %1", pOwnerEntity, audioConfig);
 	}
 	
 	// ripped from SCR_BaseDamageHealSupportStationComponent
