@@ -5,4 +5,79 @@ GameProject {
  Dependencies {
   "58D0FB3206B6F859"
  }
+ Configurations {
+  GameProjectConfig PC {
+   WidgetManagerSettings WidgetManagerSettings "{AC4BE58770485E02}" {
+    StringTables {
+     StringTableDefinition "{633E1447D52EAD8F}" {
+      StringTableSource "{A9257A3540D4FCFC}Language/local.st.st"
+      Languages {
+       LanguageDefinition "{633E1447D306CC4E}" {
+        Code "cs_cz"
+        StringTableRuntime "{09A821E31ECEC454}Language/local.st.cs_cz.conf"
+       }
+       LanguageDefinition "{633E1447D306CCB1}" {
+        Code "de_de"
+        StringTableRuntime "{DCD63BD00D6DD574}Language/local.st.de_de.conf"
+       }
+       LanguageDefinition "{633E1447D306CC85}" {
+        Code "en_us"
+        StringTableRuntime "{8226B19B679ED075}Language/local.st.en_us.conf"
+       }
+       LanguageDefinition "{633E1447D306CCEA}" {
+        Code "es_es"
+        StringTableRuntime "{476AFC12899CBB6A}Language/local.st.es_es.conf"
+       }
+       LanguageDefinition "{633E1447D306CCFA}" {
+        Code "fr_fr"
+        StringTableRuntime "{FCC209256F1F5868}Language/local.st.fr_fr.conf"
+       }
+       LanguageDefinition "{633E1447D306CCCD}" {
+        Code "it_it"
+        StringTableRuntime "{7CDE8611C23DDB91}Language/local.st.it_it.conf"
+       }
+       LanguageDefinition "{633E1447D306CCDD}" {
+        Code "ja_jp"
+        StringTableRuntime "{6CC53B83FC4CEB3A}Language/local.st.ja_jp.conf"
+       }
+       LanguageDefinition "{633E1447D306CB2E}" {
+        Code "ko_kr"
+        StringTableRuntime "{CC7B132F6F61E805}Language/local.st.ko_kr.conf"
+       }
+       LanguageDefinition "{633E1447D306CB3B}" {
+        Code "pl_pl"
+        StringTableRuntime "{900AB5D5D18E7479}Language/local.st.pl_pl.conf"
+       }
+       LanguageDefinition "{633E1447D306CB0E}" {
+        Code "pt_br"
+        StringTableRuntime "{457D2F19EA70BEC3}Language/local.st.pt_br.conf"
+       }
+       LanguageDefinition "{633E1447D306CB11}" {
+        Code "ru_ru"
+        StringTableRuntime "{103C3BB17709DBB5}Language/local.st.ru_ru.conf"
+       }
+       LanguageDefinition "{633E1447D306CB7A}" {
+        Code "uk_ua"
+        StringTableRuntime "{9A646E471B2765E0}Language/local.st.uk_ua.conf"
+       }
+       LanguageDefinition "{633E1447D3013B58}" {
+        Code "zh_cn"
+        StringTableRuntime "{40D4007A2287B5FD}Language/local.st.zh_cn.conf"
+       }
+      }
+     }
+    }
+   }
+  }
+  GameProjectConfig XBOX_ONE {
+  }
+  GameProjectConfig XBOX_SERIES {
+  }
+  GameProjectConfig PS4 {
+  }
+  GameProjectConfig PS5 {
+  }
+  GameProjectConfig HEADLESS {
+  }
+ }
 }

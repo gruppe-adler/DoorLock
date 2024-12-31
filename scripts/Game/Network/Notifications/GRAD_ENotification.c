@@ -1,0 +1,11 @@
+/*!
+Notification IDs used by SCR_NotificationsComponent.
+*/
+modded enum ENotification
+{
+	// GRAD DOORLOCK
+	GRAD_DOORLOCK_NO_KEY = 13371,
+	GRAD_DOORLOCK_CLOSE_FIRST = 13372,
+	GRAD_DOORLOCK_GM_UNLOCKED = 13373,
+	GRAD_DOORLOCK_GM_LOCKED = 13374
+};

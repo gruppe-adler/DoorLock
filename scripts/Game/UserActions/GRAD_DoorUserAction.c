@@ -5,6 +5,16 @@ modded class SCR_DoorUserAction : DoorUserAction
 	DoorComponent m_door;
 	GRAD_DoorLockComponent m_doorLock;
 	
+	override void Init(IEntity pOwnerEntity, GenericComponent pManagerComponent) {
+		DoorComponent doorComponent = GetDoorComponent();
+		m_door = doorComponent;
+		
+		GRAD_DoorLockComponent doorLockComponent = GRAD_DoorLockComponent.Cast(pOwnerEntity.FindComponent(GRAD_DoorLockComponent)); 
+		m_doorLock = doorLockComponent;
+		
+		super.Init(pOwnerEntity, pManagerComponent);
+	}
+	
     //------------------------------------------------------------------------------------------------
     override void PerformAction(IEntity pOwnerEntity, IEntity pUserEntity)
     {
@@ -13,32 +23,28 @@ modded class SCR_DoorUserAction : DoorUserAction
 			// Print("No owner");
 			return;
 		}
-
-        DoorComponent doorComponent = GetDoorComponent();
-		if (!doorComponent) {
-			// Print("No doorComp found in DoorUserAction");
-			return;
-		} else {
+		
+		// if init has failed for whatever reason
+		if (!m_door) {
+			DoorComponent doorComponent = GetDoorComponent();
 			m_door = doorComponent;
-			// Print("m_door filled with doorComponent");
+			if (!m_door) return;
+		}
+        
+		// if init has failed for whatever reason
+		if (!m_doorLock) {
+			GRAD_DoorLockComponent doorLockComponent = GRAD_DoorLockComponent.Cast(pOwnerEntity.FindComponent(GRAD_DoorLockComponent)); 
+			m_doorLock = doorLockComponent;
+			if (!m_doorLock) return;
 		}
 		
-		GRAD_DoorLockComponent doorLockComponent = GRAD_DoorLockComponent.Cast(pOwnerEntity.FindComponent(GRAD_DoorLockComponent));
-		if (!doorLockComponent) {
-			// Print("No door-Lock-Component found in DoorUserAction");
+		// we'll allow no lock component as we dont know what other mods might do
+		if (m_doorLock.GetLockState()) {
+			// Print("door locked");
+			// ShowHint("Door is locked", "Locked", false);
+			m_doorLock.playSound(true, pOwnerEntity, false);
+			
 			return;
-		} else {
-			m_doorLock = doorLockComponent;
-			if (m_doorLock.GetLockState()) {
-				// Print("door locked");
-				// ShowHint("Door is locked", "Locked", false);
-				doorLockComponent.playSound(true, pOwnerEntity, false);
-				
-				return;
-			} else {
-				// Print("door not locked");
-				// ShowHint("door not locked", "not locked", false);
-			}
 		}
 
         super.PerformAction(pOwnerEntity, pUserEntity);
@@ -47,9 +53,7 @@ modded class SCR_DoorUserAction : DoorUserAction
     //------------------------------------------------------------------------------------------------
     override bool CanBePerformedScript(IEntity user)
     {
-        DoorComponent doorComponent = GetDoorComponent();
-		
-		if (doorComponent) {
+		if (m_door) {
 			return !IsDoorLocked();
 		} else {
 			return false;
@@ -59,12 +63,11 @@ modded class SCR_DoorUserAction : DoorUserAction
     //------------------------------------------------------------------------------------------------
     override bool GetActionNameScript(out string outName)
     {
-        DoorComponent doorComponent = GetDoorComponent();
-        if (!doorComponent)
+        if (!m_door)
             return false;
 
         // Logic here is flipped since method returns the opposite of what we expect
-        if (Math.AbsFloat(doorComponent.GetControlValue()) >= 0.5)
+        if (Math.AbsFloat(m_door.GetControlValue()) >= 0.5)
             outName = "#AR-UserAction_Close";
         else
             outName = "#AR-UserAction_Open";
@@ -75,24 +78,10 @@ modded class SCR_DoorUserAction : DoorUserAction
     // Helper method to check if the door is locked
     private bool IsDoorLocked()
     {
+		// m_doorlock is only really possible to get in performaction, thus first time we let the action pass to get actual state
 		if (!m_doorLock) {
-			// Print("m_doorLock empty");
 			return false;
 		}
-
         return m_doorLock.GetLockState();
-    }
-	
-	
-
-    // Helper method to show hints
-    private void ShowHint(string message, string title, bool isSilent = true)
-    {
-        // SCR_HintManagerComponent seems to be triggered globally, so we use SCR_PopUpNotification
-		SCR_PopUpNotification popupNotifications = SCR_PopUpNotification.GetInstance();
-		if (!popupNotifications)
-			return;
-
-		popupNotifications.PopupMsg(text: title, duration: 5, text2: message);
     }
 };
