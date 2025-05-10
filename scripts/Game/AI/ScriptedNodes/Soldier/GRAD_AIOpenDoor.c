@@ -14,7 +14,7 @@ modded class SCR_AIOpenDoor : AITaskScripted{
         DoorComponent primaryDoorComp = DoorComponent.Cast(doorEntity.FindComponent(DoorComponent));
         if (primaryDoorComp)
         {
-            GRAD_DoorLockComponent primaryDoorLock = GRAD_DoorLockComponent.Cast(primaryDoorComp.GetOwner().FindComponent(GRAD_DoorLockComponent)); // Assuming lock component is sibling to DoorComponent
+            GRAD_DoorLockComponent primaryDoorLock = GRAD_DoorLockComponent.Cast(primaryDoorComp.FindComponent(GRAD_DoorLockComponent)); // Assuming lock component is sibling to DoorComponent
             if (primaryDoorLock && primaryDoorLock.GetLockState() && !primaryDoorComp.IsOpen()) // If primary door is locked and closed
             {
                 return ENodeResult.FAIL; // Cannot open the specifically targeted locked door.
