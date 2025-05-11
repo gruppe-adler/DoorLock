@@ -6,6 +6,7 @@ class GRAD_DoorLockAction : ScriptedUserAction
 	DoorComponent m_door;
 	GRAD_DoorLockComponent m_lockComponent;
 	IEntity m_building;
+	static const string SIGNAL_INTERIOR = "GInterior";
 	
 	override void Init(IEntity pOwnerEntity, GenericComponent pManagerComponent) {
 		
@@ -13,6 +14,10 @@ class GRAD_DoorLockAction : ScriptedUserAction
 		m_building = pOwnerEntity.GetRootParent();
 		
 		m_lockComponent = GRAD_DoorLockComponent.Cast(pOwnerEntity.FindComponent(GRAD_DoorLockComponent));
+		
+		if (!m_door || !m_lockComponent) {
+	        return;
+	    }
 		
 		super.Init(pOwnerEntity, pManagerComponent);
 	}
@@ -31,11 +36,34 @@ class GRAD_DoorLockAction : ScriptedUserAction
 		};		
 	}
 	
-	//------------------------------------------------------------------------------------------------
-    override bool CanBePerformedScript(IEntity user)
+	 override bool CanBePerformedScript(IEntity user)
     {
+		if (!IsHumanPlayer(user)) {
+		    SetCannotPerformReason("Only human players may lock/unlock doors");
+			PrintFormat("Only human players may lock/unlock doors");
+		    return false;
+		}
+
+        // for players, only if we actually have a lock component
         return m_lockComponent != null;
     }
+
+    override bool CanBeShownScript(IEntity user)
+    {
+        if (!IsHumanPlayer(user)) {
+	    SetCannotPerformReason("Only human players may lock/unlock doors");
+			PrintFormat("Only human players may lock/unlock doors");
+	    return false;
+	}
+
+        // otherwise fall back to normal scripted-visibility
+        return super.CanBeShownScript(user);
+    }
+	
+	private bool IsHumanPlayer(IEntity user) {
+    	AIControlComponent ai = AIControlComponent.Cast(user.FindComponent(AIControlComponent));
+    	return ai == null || !ai.IsAIActivated();
+	}
 	
 	
     //------------------------------------------------------------------------------------------------
@@ -44,6 +72,8 @@ class GRAD_DoorLockAction : ScriptedUserAction
 	//------------------------------------------------------------------------------------------------
     override void PerformAction(IEntity pOwnerEntity, IEntity pUserEntity)
     {
+		bool isGM = SCR_EditorManagerEntity.IsOpenedInstance();
+		
 		if (!pOwnerEntity || !m_door) {
 			Print("no owner or no m_door in DoorLockAction");
 			return;
@@ -53,7 +83,6 @@ class GRAD_DoorLockAction : ScriptedUserAction
 		//		if (!Replication.IsServer()) return;
 		
 		SCR_ChimeraCharacter character = SCR_ChimeraCharacter.Cast(pUserEntity);
-        bool isGM = SCR_EditorManagerEntity.IsOpenedInstance();
         string lockOwnerString = m_lockComponent.GetLockOwner();
         bool isLocked = m_lockComponent.GetLockState();
 		
@@ -93,7 +122,7 @@ class GRAD_DoorLockAction : ScriptedUserAction
 		
 		if (character && !isGM) {
             float gInterior = GetGame().GetSignalsManager().GetSignalValue(
-                GetGame().GetSignalsManager().AddOrFindSignal("GInterior")
+                GetGame().GetSignalsManager().AddOrFindSignal(SIGNAL_INTERIOR)
             );
 
             // Players inside the house can always unlock to prevent being stuck
