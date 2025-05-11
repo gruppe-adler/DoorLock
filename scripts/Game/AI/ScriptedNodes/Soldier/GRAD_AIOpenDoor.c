@@ -104,44 +104,4 @@ modded class SCR_AIOpenDoor : AITaskScripted{
             return ENodeResult.FAIL;
         }
     }
-	
-	//------------------------------------------------------------------------------------------------
-	//------------------------------------------------------------------------------------------------
-	override static SCR_DoorUserAction FindDoorUserAction(notnull IEntity entity)
-	{
-	    ActionsManagerComponent actionsMgr = ActionsManagerComponent.Cast(entity.FindComponent(ActionsManagerComponent));
-	
-	    if (!actionsMgr)
-	        return null;
-	
-	    array<BaseUserAction> actions = {};
-	    actionsMgr.GetActionsList(actions);
-	
-	    SCR_DoorUserAction preferredAction = null;
-	
-	    foreach (BaseUserAction action : actions)
-	    {
-	        // Try to cast to GRAD_DoorLockAction first.
-	        // If it is a lock action, we are not interested in it for opening the door.
-	        if (GRAD_DoorLockAction.Cast(action))
-	        {
-	            continue; // Skip this action, look for a different one.
-	        }
-	
-	        // If it's not a lock action, try to cast to SCR_DoorUserAction.
-	        // This should be our target action for opening or closing.
-	        SCR_DoorUserAction doorManipulationAction = SCR_DoorUserAction.Cast(action);
-	        if (doorManipulationAction)
-	        {
-	            // We found an SCR_DoorUserAction that is NOT a GRAD_DoorLockAction.
-	            // This is likely the action we want (e.g., open/close).
-	            // We take the first one we find that fits this criterion.
-	            preferredAction = doorManipulationAction;
-	            break; 
-	        }
-	    }
-	    
-	    // Return the preferred action, which might be null if no suitable action was found.
-	    return preferredAction; 
-	}
 };
