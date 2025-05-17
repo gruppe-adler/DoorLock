@@ -34,8 +34,16 @@ class GRAD_DoorLockComponent : ScriptComponent
 	}
 	
 	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
-    protected void Rpc_ToggleLock(bool targetState)
+    protected void Rpc_ToggleLock(int userPlayerId, bool targetState)
 	{	
+		IEntity userEnt = GetGame().GetPlayerManager().GetPlayerControlledEntity(userPlayerId);
+	    SCR_ChimeraCharacter ch = SCR_ChimeraCharacter.Cast(userEnt);
+	    bool isGM = SCR_EditorManagerEntity.IsOpenedInstance();
+	    string faction = "";
+		if (ch) {
+			faction = ch.GetFactionKey();
+		}
+		
 		m_isLocked = targetState;
         Replication.BumpMe();
         // play sound on server so clients hear it
@@ -46,10 +54,11 @@ class GRAD_DoorLockComponent : ScriptComponent
 		Print("InLoadtimeMode: " + Replication.Loadtime());
 	}
 	
-	void RequestToggleLock(bool targetState)
+	void RequestToggleLock(IEntity pUserEntity, bool targetState)
     {
+		int userPlayerId = GetGame().GetPlayerManager().GetPlayerIdFromControlledEntity(pUserEntity);
         // execute on server
-        Rpc(Rpc_ToggleLock, targetState);
+        Rpc(Rpc_ToggleLock, userPlayerId, targetState);
     }
 	
 	void RequestLockedFeedback(int userPlayerId)

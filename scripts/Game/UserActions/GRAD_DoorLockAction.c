@@ -74,7 +74,7 @@ class GRAD_DoorLockAction : ScriptedUserAction
         if (CanUseLock(owner, isGM, SCR_ChimeraCharacter.Cast(pUserEntity), pUserEntity, pOwnerEntity, locked))
         {
             // forward to component; it does the RPC internally
-            m_lockComponent.RequestToggleLock(!locked);
+            m_lockComponent.RequestToggleLock(pUserEntity, !locked);
         }
         else
         {
