@@ -11,16 +11,12 @@ class GRAD_DoorLockComponent : ScriptComponent
 		
 	[RplProp()]
 	protected string m_lockOwner = "";
-	
-	protected RplComponent m_RplComponent;
 
     // Called when the game initializes the component
     override void OnPostInit(IEntity owner)
     {	
         super.OnPostInit(owner);
         // Print("Door Lock Component Initialized with: " + m_isLocked.ToString());
-		// cache our rpl
-		m_RplComponent = RplComponent.Cast(owner.FindComponent(RplComponent));
     }
 	
 	bool GetLockState() 
@@ -33,97 +29,108 @@ class GRAD_DoorLockComponent : ScriptComponent
 		return m_lockOwner;
 	}
 	
-	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
-    protected void Rpc_ToggleLock(int userPlayerId, bool targetState)
-	{	
-		IEntity userEnt = GetGame().GetPlayerManager().GetPlayerControlledEntity(userPlayerId);
-	    SCR_ChimeraCharacter ch = SCR_ChimeraCharacter.Cast(userEnt);
-	    bool isGM = SCR_EditorManagerEntity.IsOpenedInstance();
-	    string faction = "";
-		if (ch) {
-			faction = ch.GetFactionKey();
-		}
-		
-		m_isLocked = targetState;
-        Replication.BumpMe();
-        // play sound on server so clients hear it
-        playSound(targetState, GetOwner(), true);
-		Print("IsServer: " + Replication.IsServer());
-		Print("IsClient: " + Replication.IsClient());
-		Print("InRuntimeMode: " + Replication.Runtime());
-		Print("InLoadtimeMode: " + Replication.Loadtime());
-	}
-	
-	void RequestToggleLock(IEntity pUserEntity, bool targetState)
+	 // Server‐only RPC: enforces lock/unlock permissions and opens/closes
+    [RplRpc(RplChannel.Reliable, RplRcver.Server)]
+    protected void Rpc_HandleDoorUse(int userPlayerId, bool wantLockState)
     {
-		int userPlayerId = GetGame().GetPlayerManager().GetPlayerIdFromControlledEntity(pUserEntity);
-        // execute on server
-        Rpc(Rpc_ToggleLock, userPlayerId, targetState);
-    }
-	
-	void RequestLockedFeedback(int userPlayerId)
-    {
-       // calling the stub from _inside_ this class is allowed
-       Rpc_PlayLockedFeedback(userPlayerId);
-    }
-	
-	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
-	protected void Rpc_PlayLockedFeedback(int userPlayerId)
-	{
-	    // 1) play the “rattle” sound for everyone
-	    playSound(true, GetOwner(), /*canUnlock=*/false);
-	
-	    // 2) notify only the single player who tried the door
-	    SCR_NotificationsComponent.SendToUnlimitedEditorPlayersAndPlayer(
-	        userPlayerId,
-	        ENotification.GRAD_DOORLOCK_NO_KEY,
-	        userPlayerId
-	    );
-	}
-	
-	
-	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
-	protected void Rpc_HandleDoorUse(int userPlayerId)
-	{
-	    IEntity doorEnt = GetOwner();
-	    IEntity userEnt = GetGame().GetPlayerManager().GetPlayerControlledEntity(userPlayerId);
-	    if (!doorEnt || !userEnt) 
+        // 1) Only run on the true server
+        if (!Replication.IsServer())
+	    {
+	        Print("Rpc_HandleDoorUse: skipping because not server");
 	        return;
-	
-	    // if locked: rattle + notify
-	    if (m_isLocked)
-	    {
-	        playSound(true, doorEnt, /*canUnlock=*/false);
-	        SCR_NotificationsComponent.SendToUnlimitedEditorPlayersAndPlayer(
-	            userPlayerId,
-	            ENotification.GRAD_DOORLOCK_NO_KEY,
-	            userPlayerId
-	        );
 	    }
-	    else
-	    {
-	        // unlocked: do the vanilla open/close on the server
-	        DoorComponent dc = DoorComponent.Cast(doorEnt.FindComponent(DoorComponent));
-	        if (dc) { 
-				float current = dc.GetControlValue();
-				float target;
-				if (current > 0.5)
-				{
-				    target = 0.0;
-				}
-				else
-				{
-				    target = 1.0;
-				}
-				dc.SetControlValue(target) 
-			};
-	    }
-	}
+
+
+        // 2) Lookup entities
+        IEntity doorEnt = GetOwner();
+        IEntity userEnt = GetGame().GetPlayerManager().GetPlayerControlledEntity(userPlayerId);
+        if (!doorEnt || !userEnt)
+            return;
+
+        // 3) Determine the caller’s faction
+        SCR_ChimeraCharacter ch = SCR_ChimeraCharacter.Cast(userEnt);
+        string faction = "";
+        if (ch)
+            faction = ch.GetFactionKey();
+		
+		
+		PrintFormat(
+	        "Rpc_HandleDoorUse: userId=%1, faction='%2', wantLock=%3, currentLocked=%4, lockOwner='%5'",
+	        userPlayerId, faction, wantLockState, m_isLocked, m_lockOwner
+	    );
+
+        // 4) UNLOCK request?
+        if (wantLockState == false && m_isLocked == true)
+        {
+            // only owning faction may unlock
+            if (faction != m_lockOwner)
+            {
+				 PrintFormat(
+	                " → Deny UNLOCK: faction '%1' != lockOwner '%2'",
+	                faction, m_lockOwner
+	            );
+                playSound(true, doorEnt, false);
+                SCR_NotificationsComponent.SendToUnlimitedEditorPlayersAndPlayer(
+                    userPlayerId,
+                    ENotification.GRAD_DOORLOCK_NO_KEY,
+                    userPlayerId
+                );
+                return;
+            }
+			
+			Print(" → Allow UNLOCK");
+            // allowed → clear lock
+            m_isLocked   = false;
+            m_lockOwner  = "";
+            Replication.BumpMe();
+            playSound(false, doorEnt, true);
+            return;
+        }
+
+        // 5) LOCK request?
+        if (wantLockState == true && m_isLocked == false)
+        {
+            // only players with a faction may lock
+            if (faction == "")
+            {
+                playSound(true, doorEnt, false);
+                SCR_NotificationsComponent.SendToUnlimitedEditorPlayersAndPlayer(
+                    userPlayerId,
+                    ENotification.GRAD_DOORLOCK_NO_KEY,
+                    userPlayerId
+                );
+                return;
+            }
+
+            m_isLocked  = true;
+            m_lockOwner = faction;
+            Replication.BumpMe();
+            playSound(true, doorEnt, true);
+            return;
+        }
+
+        // 6) FALLBACK: open/close the door
+        DoorComponent dc = DoorComponent.Cast(doorEnt.FindComponent(DoorComponent));
+        if (dc)
+        {
+            float current = dc.GetControlValue();
+            float target;
+            if (current > 0.5)
+            {
+                target = 0.0;
+            }
+            else
+            {
+                target = 1.0;
+            }
+            dc.SetControlValue(target);
+        }
+    }
 	
 	// public wrapper so other classes can invoke the above RPC
-	void RequestUse(int userPlayerId)
+	void RequestUse(int userPlayerId, bool wantLock)
 	{
-	    Rpc_HandleDoorUse(userPlayerId);
+	    Rpc(Rpc_HandleDoorUse, userPlayerId, wantLock);
 	}
 
 

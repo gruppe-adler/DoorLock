@@ -39,7 +39,7 @@ modded class SCR_DoorUserAction : DoorUserAction
 		}
 		
 		int playerId = GetGame().GetPlayerManager().GetPlayerIdFromControlledEntity(pUserEntity);
-		m_doorLock.RequestUse(playerId);
+		m_doorLock.RequestUse(playerId, !m_doorLock);
     }
 
     //------------------------------------------------------------------------------------------------
