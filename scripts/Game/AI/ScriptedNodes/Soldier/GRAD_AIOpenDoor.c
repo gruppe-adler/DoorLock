@@ -20,18 +20,20 @@ modded class SCR_AIOpenDoor : AITaskScripted
 
         foreach (BaseUserAction b : raw)
         {
-            if (GRAD_DoorLockAction.Cast(b))
+			SCR_DoorUserAction doorAct = SCR_DoorUserAction.Cast(b);
+            if (doorAct)
             {
                 Print(LOGTAG + "    - skipping LOCK action: " + b.GetActionName());
                 continue;
             }
 
-            SCR_DoorUserAction doorAct = SCR_DoorUserAction.Cast(b);
-            if (doorAct)
-            {
-                Print(LOGTAG + "    + selecting OPEN/CLOSE action: " + doorAct.GetActionName());
-                return doorAct;
-            }
+            // single declaration; only pick if unlocked
+	
+	        if (doorAct && !GRAD_DoorLockComponent.Cast(doorAct.GetOwner().FindComponent(GRAD_DoorLockComponent)).GetLockState())
+	        {
+	            Print(LOGTAG + "    + selecting OPEN/CLOSE action: " + doorAct.GetActionName());
+	            return doorAct;
+	        }
         }
 
         Print(LOGTAG + " → no open/close action found");
@@ -52,19 +54,6 @@ modded class SCR_AIOpenDoor : AITaskScripted
             return ENodeResult.FAIL;
         }
         Print(LOGTAG + " → doorEntity = " + doorEnt);
-
-        // 2.2) primary lock check
-        DoorComponent dcPrimary = DoorComponent.Cast(doorEnt.FindComponent(DoorComponent));
-        GRAD_DoorLockComponent lcPrimary = GRAD_DoorLockComponent.Cast(doorEnt.FindComponent(GRAD_DoorLockComponent));
-        if (dcPrimary && lcPrimary)
-        {
-            Print(LOGTAG + " → primary locked = " + lcPrimary.GetLockState());
-            if (lcPrimary.GetLockState() && !dcPrimary.IsOpen())
-            {
-                Print(LOGTAG + " → FAIL: primary door locked & closed");
-                return ENodeResult.FAIL;
-            }
-        }
 
         // 2.3) pick the one “open/close” action (our override of FindDoorUserAction has already killed lock/unlock)
         array<ScriptedUserAction> acts = {};
@@ -100,8 +89,8 @@ modded class SCR_AIOpenDoor : AITaskScripted
             // sibling lock check
             if (dc && lc && lc.GetLockState() && !dc.IsOpen())
             {
-                Print(LOGTAG + "    - FAIL: sibling door locked");
-                return ENodeResult.FAIL;
+                Print(LOGTAG + "    - sibling door locked, skipping");
+                continue; // try next door
             }
 
             // perform open if needed

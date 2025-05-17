@@ -38,16 +38,8 @@ modded class SCR_DoorUserAction : DoorUserAction
 			if (!m_doorLock) return;
 		}
 		
-		// we'll allow no lock component as we dont know what other mods might do
-		if (m_doorLock.GetLockState()) {
-			// Print("door locked");
-			// ShowHint("Door is locked", "Locked", false);
-			m_doorLock.playSound(true, pOwnerEntity, false);
-			
-			return;
-		}
-
-        super.PerformAction(pOwnerEntity, pUserEntity);
+		int playerId = GetGame().GetPlayerManager().GetPlayerIdFromControlledEntity(pUserEntity);
+		m_doorLock.RequestUse(playerId);
     }
 
     //------------------------------------------------------------------------------------------------

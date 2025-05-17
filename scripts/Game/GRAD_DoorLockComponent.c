@@ -2,6 +2,7 @@
 class GRAD_DoorLockComponentClass : ScriptComponentClass {
 }
 
+[RplComponent]
 class GRAD_DoorLockComponent : ScriptComponent
 {
     // synced attributes
@@ -10,12 +11,16 @@ class GRAD_DoorLockComponent : ScriptComponent
 		
 	[RplProp()]
 	protected string m_lockOwner = "";
+	
+	protected RplComponent m_RplComponent;
 
     // Called when the game initializes the component
     override void OnPostInit(IEntity owner)
     {	
         super.OnPostInit(owner);
         // Print("Door Lock Component Initialized with: " + m_isLocked.ToString());
+		// cache our rpl
+		m_RplComponent = RplComponent.Cast(owner.FindComponent(RplComponent));
     }
 	
 	bool GetLockState() 
@@ -28,19 +33,91 @@ class GRAD_DoorLockComponent : ScriptComponent
 		return m_lockOwner;
 	}
 	
-	void ToggleLockState(IEntity pUserEntity, IEntity door, bool targetState)
+	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
+    protected void Rpc_ToggleLock(bool targetState)
 	{	
-		if (targetState) {
-			playSound(true, door, true);
-			m_isLocked = targetState;
-			Replication.BumpMe();
-		} else {
-			playSound(false, door, true);
-			m_isLocked = targetState;
-			Replication.BumpMe();
-		}
-		// Print("Door Lock Component set to: " + m_isLocked.ToString());		
+		m_isLocked = targetState;
+        Replication.BumpMe();
+        // play sound on server so clients hear it
+        playSound(targetState, GetOwner(), true);
+		Print("IsServer: " + Replication.IsServer());
+		Print("IsClient: " + Replication.IsClient());
+		Print("InRuntimeMode: " + Replication.Runtime());
+		Print("InLoadtimeMode: " + Replication.Loadtime());
 	}
+	
+	void RequestToggleLock(bool targetState)
+    {
+        // execute on server
+        Rpc(Rpc_ToggleLock, targetState);
+    }
+	
+	void RequestLockedFeedback(int userPlayerId)
+    {
+       // calling the stub from _inside_ this class is allowed
+       Rpc_PlayLockedFeedback(userPlayerId);
+    }
+	
+	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
+	protected void Rpc_PlayLockedFeedback(int userPlayerId)
+	{
+	    // 1) play the “rattle” sound for everyone
+	    playSound(true, GetOwner(), /*canUnlock=*/false);
+	
+	    // 2) notify only the single player who tried the door
+	    SCR_NotificationsComponent.SendToUnlimitedEditorPlayersAndPlayer(
+	        userPlayerId,
+	        ENotification.GRAD_DOORLOCK_NO_KEY,
+	        userPlayerId
+	    );
+	}
+	
+	
+	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
+	protected void Rpc_HandleDoorUse(int userPlayerId)
+	{
+	    IEntity doorEnt = GetOwner();
+	    IEntity userEnt = GetGame().GetPlayerManager().GetPlayerControlledEntity(userPlayerId);
+	    if (!doorEnt || !userEnt) 
+	        return;
+	
+	    // if locked: rattle + notify
+	    if (m_isLocked)
+	    {
+	        playSound(true, doorEnt, /*canUnlock=*/false);
+	        SCR_NotificationsComponent.SendToUnlimitedEditorPlayersAndPlayer(
+	            userPlayerId,
+	            ENotification.GRAD_DOORLOCK_NO_KEY,
+	            userPlayerId
+	        );
+	    }
+	    else
+	    {
+	        // unlocked: do the vanilla open/close on the server
+	        DoorComponent dc = DoorComponent.Cast(doorEnt.FindComponent(DoorComponent));
+	        if (dc) { 
+				float current = dc.GetControlValue();
+				float target;
+				if (current > 0.5)
+				{
+				    target = 0.0;
+				}
+				else
+				{
+				    target = 1.0;
+				}
+				dc.SetControlValue(target) 
+			};
+	    }
+	}
+	
+	// public wrapper so other classes can invoke the above RPC
+	void RequestUse(int userPlayerId)
+	{
+	    Rpc_HandleDoorUse(userPlayerId);
+	}
+
+
 	
 	void playSound (bool locked, IEntity pOwnerEntity, bool canUnlock) {
 		
