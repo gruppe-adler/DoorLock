@@ -18,28 +18,28 @@ modded class SCR_DoorUserAction : DoorUserAction
     //------------------------------------------------------------------------------------------------
     override void PerformAction(IEntity pOwnerEntity, IEntity pUserEntity)
     {
-		if (!pOwnerEntity) {
-			// ShowHint("No owner", "Locked");
-			// Print("No owner");
+		if (!pOwnerEntity)
 			return;
-		}
-		
+
 		// if init has failed for whatever reason
 		if (!m_door) {
 			DoorComponent doorComponent = GetDoorComponent();
 			m_door = doorComponent;
 			if (!m_door) return;
 		}
-        
+
 		// if init has failed for whatever reason
 		if (!m_doorLock) {
-			GRAD_DoorLockComponent doorLockComponent = GRAD_DoorLockComponent.Cast(pOwnerEntity.FindComponent(GRAD_DoorLockComponent)); 
+			GRAD_DoorLockComponent doorLockComponent = GRAD_DoorLockComponent.Cast(pOwnerEntity.FindComponent(GRAD_DoorLockComponent));
 			m_doorLock = doorLockComponent;
-			if (!m_doorLock) return;
 		}
-		
-		int playerId = GetGame().GetPlayerManager().GetPlayerIdFromControlledEntity(pUserEntity);
-		m_doorLock.RequestUse(playerId, !m_doorLock);
+
+		// Check if door is locked - if so, don't allow opening
+		if (m_doorLock && m_doorLock.GetLockState())
+			return;
+
+		// Door is not locked, proceed with normal open/close action
+		super.PerformAction(pOwnerEntity, pUserEntity);
     }
 
     //------------------------------------------------------------------------------------------------

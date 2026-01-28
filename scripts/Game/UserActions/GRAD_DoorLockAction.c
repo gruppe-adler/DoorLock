@@ -5,7 +5,6 @@ class GRAD_DoorLockAction : ScriptedUserAction
 {
 	protected DoorComponent            m_door;
     protected GRAD_DoorLockComponent   m_lockComponent;
-    static const string               SIGNAL_INTERIOR = "GInterior";
 	
 	override void Init(IEntity pOwnerEntity, GenericComponent pManagerComponent)
     {
@@ -57,75 +56,28 @@ class GRAD_DoorLockAction : ScriptedUserAction
         if (!m_door || !m_lockComponent)
             return;
 
-        bool isGM    = SCR_EditorManagerEntity.IsOpenedInstance();
-        string owner = m_lockComponent.GetLockOwner();
-        bool locked  = m_lockComponent.GetLockState();
-		SCR_ChimeraCharacter char = SCR_ChimeraCharacter.Cast(pUserEntity);
-		bool needsClose = false;
-		if (char)
-		{
-		    string factionKey = char.GetFactionKey();
-		    if (factionKey == owner || owner.IsEmpty())
-		    {
-		        needsClose = true;
-		    }
-		}
+        bool isGM = SCR_EditorManagerEntity.IsOpenedInstance();
+        int playerId;
 
-        if (CanUseLock(owner, isGM, SCR_ChimeraCharacter.Cast(pUserEntity), pUserEntity, pOwnerEntity, locked))
+        if (isGM)
         {
-            // forward to component; it does the RPC internally
-			int playerId = GetGame()
-           .GetPlayerManager()
-           .GetPlayerIdFromControlledEntity(pUserEntity);
-       		bool wantLock = !m_lockComponent.GetLockState();
-       		m_lockComponent.RequestUse(playerId, wantLock);
+            playerId = SCR_PlayerController.GetLocalPlayerId();
         }
         else
         {
-            if (needsClose)
-			{
-			    ShowNotification(ENotification.GRAD_DOORLOCK_CLOSE_FIRST, pUserEntity, isGM);
-			}
-			else
-			{
-			    ShowNotification(ENotification.GRAD_DOORLOCK_NO_KEY, pUserEntity, isGM);
-			}
+            playerId = GetGame().GetPlayerManager().GetPlayerIdFromControlledEntity(pUserEntity);
         }
+
+        if (playerId < 0)
+        {
+            Print("GRAD_DoorLockAction: Invalid player ID");
+            return;
+        }
+
+        // Let the server RPC handle all validation, permissions, and state changes
+        bool wantLock = !m_lockComponent.GetLockState();
+        m_lockComponent.RequestUse(playerId, wantLock);
     }
-	
-	
-	private bool CanUseLock(string lockOwner, bool isGM, SCR_ChimeraCharacter charent, IEntity user, IEntity door, bool locked)
-	  {
-	      // GM always allowed (and we flip ownership)
-	      if (isGM)
-	          return true;
-	
-	      // players inside can always unlock
-	      float inside = GetGame().GetSignalsManager().GetSignalValue(
-	          GetGame().GetSignalsManager().AddOrFindSignal(SIGNAL_INTERIOR)
-	      );
-	      if (inside > 0.9)
-	          return true;
-	
-	      // if they’re the owner faction (or unclaimed), allow it
-	      if (charent && (charent.GetFactionKey() == lockOwner || lockOwner.IsEmpty()))
-	      {
-	          if (lockOwner.IsEmpty())
-	              m_lockComponent.SetLockOwner(charent.GetFactionKey());
-	          return true;
-	      }
-	
-	      return false;
-	  }
-	
-	private void ShowNotification(ENotification msg, IEntity user, bool isGM)
-	  {
-	      int pid = GetGame().GetPlayerManager().GetPlayerIdFromControlledEntity(user);
-	      if (isGM)
-	          pid = SCR_PlayerController.GetLocalPlayerId();
-	
-	      SCR_NotificationsComponent.SendToUnlimitedEditorPlayersAndPlayer(pid, msg, pid);
-	  }
 	
 	private bool IsHumanPlayer(IEntity user)
 	  {
